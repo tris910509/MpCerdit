@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aplikasi Pembayaran Cicilan Produk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body{padding:20px}
+    .card{margin-bottom:16px}
+    .table-small td, .table-small th{padding:.4rem}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-3">Aplikasi Pembayaran Cicilan Produk</h1>
+
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Tambah / Pilih Produk</h5>
+            <form id="productForm" class="mb-3">
+              <div class="mb-2">
+                <label class="form-label">Nama Produk</label>
+                <input id="pName" class="form-control" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Harga (Rp)</label>
+                <input id="pPrice" type="number" min="0" class="form-control" required>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Tambah Produk</button>
+                <button id="loadSample" class="btn btn-outline-secondary" type="button">Load Sample</button>
+              </div>
+            </form>
+
+            <h6>Daftar Produk</h6>
+            <ul id="productList" class="list-group list-group-flush" style="max-height:220px; overflow:auto"></ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Buat Cicilan</h5>
+            <form id="installmentForm">
+              <div class="mb-2">
+                <label class="form-label">Pilih Produk</label>
+                <select id="selectProduct" class="form-select" required></select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Uang Muka (DP) Rp</label>
+                <input id="dp" type="number" min="0" class="form-control" value="0" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Tenor (bulan)</label>
+                <input id="tenor" type="number" min="1" class="form-control" value="12" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Bunga per tahun (%)</label>
+                <input id="annualRate" type="number" step="0.01" min="0" class="form-control" value="12">
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Nama Debitur</label>
+                <input id="debtor" class="form-control" required>
+              </div>
+              <button class="btn btn-success" type="submit">Buat Cicilan</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Daftar Cicilan Aktif</h5>
+            <table class="table table-striped table-small" id="installmentTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Debitur</th>
+                  <th>Produk</th>
+                  <th>Total</th>
+                  <th>Sisa</th>
+                  <th>Tenor</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title">Rincian Cicilan & Jadwal Pembayaran</h5>
+            <div id="detailArea">Pilih cicilan untuk melihat jadwal pembayaran.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+<script>
+// --- Storage keys ---
+const KEY_PRODUCTS = 'aplikasi_cicilan_products_v1'
+const KEY_INSTALLMENTS = 'aplikasi_cicilan_plans_v1'
+
+// --- Utilities ---
+const fmt = n => Number(n).toLocaleString('id-ID')
+
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)) }
+function load(key){ try{ return JSON.parse(localStorage.getItem(key)) || [] }catch(e){return []} }
+
+// --- Data init ---
+let products = load(KEY_PRODUCTS)
+let installments = load(KEY_INSTALLMENTS)
+
+// --- DOM refs ---
+const productList = document.getElementById('productList')
+const selectProduct = document.getElementById('selectProduct')
+const productForm = document.getElementById('productForm')
+const pName = document.getElementById('pName')
+const pPrice = document.getElementById('pPrice')
+const loadSampleBtn = document.getElementById('loadSample')
+
+const installmentForm = document.getElementById('installmentForm')
+const dpInput = document.getElementById('dp')
+const tenorInput = document.getElementById('tenor')
+const annualRateInput = document.getElementById('annualRate')
+const debtorInput = document.getElementById('debtor')
+
+const installmentTableBody = document.querySelector('#installmentTable tbody')
+const detailArea = document.getElementById('detailArea')
+
+// --- Render functions ---
+function renderProducts(){
+  productList.innerHTML = ''
+  selectProduct.innerHTML = ''
+  products.forEach((p, i)=>{
+    const li = document.createElement('li')
+    li.className = 'list-group-item d-flex justify-content-between align-items-start'
+    li.innerHTML = `
+      <div>
+        <div class="fw-bold">${p.name}</div>
+        <small>Rp ${fmt(p.price)}</small>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="chooseProduct(${i})"><i class="fa fa-arrow-right"></i></button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${i})"><i class="fa fa-trash"></i></button>
+      </div>`
+    productList.appendChild(li)
+
+    const opt = document.createElement('option')
+    opt.value = p.id
+    opt.textContent = `${p.name} — Rp ${fmt(p.price)}`
+    selectProduct.appendChild(opt)
+  })
+  if(products.length===0) selectProduct.innerHTML = '<option value="">-- tidak ada produk --</option>'
+}
+
+function renderInstallments(){
+  installmentTableBody.innerHTML = ''
+  installments.forEach((ins, idx)=>{
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${ins.debtor}</td>
+      <td>${ins.productName}</td>
+      <td>Rp ${fmt(ins.totalAmount)}</td>
+      <td>Rp ${fmt(ins.remaining)}</td>
+      <td>${ins.tenor} bln</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="viewDetail('${ins.id}')">Detail</button>
+        <button class="btn btn-sm btn-success" onclick="makePayment('${ins.id}')">Bayar Cicilan</button>
+      </td>`
+    installmentTableBody.appendChild(tr)
+  })
+}
+
+function renderAll(){ renderProducts(); renderInstallments(); }
+
+// --- Product actions ---
+function chooseProduct(i){ const p = products[i]; if(!p) return; selectProduct.value = p.id }
+function deleteProduct(i){
+  Swal.fire({title:'Hapus produk?', text: products[i].name, icon:'warning', showCancelButton:true}).then(res=>{
+    if(res.isConfirmed){ products.splice(i,1); save(KEY_PRODUCTS, products); renderAll(); Swal.fire('Dihapus','Produk dihapus','success') }
+  })
+}
+
+productForm.addEventListener('submit', e=>{
+  e.preventDefault()
+  const name = pName.value.trim(); const price = Number(pPrice.value)
+  if(!name || price<=0) return Swal.fire('Validasi','Nama dan harga harus benar','error')
+  const id = 'P'+Date.now()
+  products.push({id, name, price})
+  save(KEY_PRODUCTS, products)
+  pName.value=''; pPrice.value=''
+  renderAll()
+  Swal.fire('Berhasil','Produk ditambahkan','success')
+})
+
+loadSampleBtn.addEventListener('click', ()=>{
+  const sample = [
+    {id:'P1001', name:'Kulkas 2 Pintu', price:4500000},
+    {id:'P1002', name:'TV LED 32"', price:2200000},
+    {id:'P1003', name:'Laptop Sederhana', price:6500000}
+  ]
+  products = products.concat(sample)
+  save(KEY_PRODUCTS, products)
+  renderAll()
+  Swal.fire('Sample dimuat','3 produk sample ditambahkan','success')
+})
+
+// --- Installment logic ---
+// Simple annuity formula for monthly payment: A = P * r / (1 - (1+r)^-n)
+function monthlyPayment(principal, monthlyRate, months){
+  if(monthlyRate === 0) return principal / months
+  const r = monthlyRate
+  return principal * r / (1 - Math.pow(1+r, -months))
+}
+
+installmentForm.addEventListener('submit', e=>{
+  e.preventDefault()
+  const pid = selectProduct.value
+  const product = products.find(p=>p.id===pid)
+  if(!product) return Swal.fire('Pilih produk','Pilih produk dari daftar','error')
+  const dp = Number(dpInput.value) || 0
+  const tenor = Number(tenorInput.value) || 1
+  const annualRate = Number(annualRateInput.value) || 0
+  const debtor = debtorInput.value.trim() || 'Tanpa Nama'
+  if(dp > product.price) return Swal.fire('DP terlalu besar','Uang muka tidak boleh lebih besar dari harga','error')
+
+  const financed = product.price - dp
+  const monthlyRate = annualRate/100/12
+  const monthly = monthlyPayment(financed, monthlyRate, tenor)
+  const totalToPay = monthly * tenor + dp
+
+  // generate schedule
+  const today = new Date()
+  const schedule = []
+  let balance = financed
+  for(let i=1;i<=tenor;i++){
+    const interest = balance * monthlyRate
+    const principalPortion = monthly - interest
+    balance = Math.max(0, balance - principalPortion)
+    const dueDate = new Date(today.getFullYear(), today.getMonth()+i, today.getDate())
+    schedule.push({installmentNo: i, dueDate: dueDate.toISOString().slice(0,10), amount: Math.round(monthly), paid: false})
+  }
+
+  const ins = {
+    id: 'I'+Date.now(),
+    debtor,
+    productId: product.id,
+    productName: product.name,
+    originalPrice: product.price,
+    dp, tenor, annualRate,
+    financed: Math.round(financed),
+    monthly: Math.round(monthly),
+    totalAmount: Math.round(totalToPay),
+    remaining: Math.round(totalToPay - 0),
+    schedule
+  }
+  installments.push(ins)
+  save(KEY_INSTALLMENTS, installments)
+  renderAll()
+  Swal.fire('Sukses', 'Cicilan dibuat untuk '+debtor, 'success')
+  installmentForm.reset(); tenorInput.value=12; annualRateInput.value=12
+})
+
+// --- View detail ---
+function viewDetail(id){
+  const ins = installments.find(i=>i.id===id)
+  if(!ins) return
+  let html = `
+    <h6>${ins.debtor} — ${ins.productName}</h6>
+    <p>Harga: Rp ${fmt(ins.originalPrice)} · DP: Rp ${fmt(ins.dp)} · Financed: Rp ${fmt(ins.financed)}</p>
+    <p>Tenor: ${ins.tenor} bulan · Bunga tahunan: ${ins.annualRate}% · Angsuran/bulan: Rp ${fmt(ins.monthly)}</p>
+    <div class="table-responsive"><table class="table table-sm table-striped"><thead><tr><th>#</th><th>Jatuh Tempo</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr></thead><tbody>`
+  ins.schedule.forEach(s=>{
+    html += `<tr>
+      <td>${s.installmentNo}</td>
+      <td>${s.dueDate}</td>
+      <td>Rp ${fmt(s.amount)}</td>
+      <td>${s.paid ? '<span class="badge bg-success">Lunas</span>' : '<span class="badge bg-warning text-dark">Belum</span>'}</td>
+      <td>${s.paid ? '' : `<button class="btn btn-sm btn-primary" onclick="paySchedule('${ins.id}',${s.installmentNo})">Bayar</button>`}</td>
+    </tr>`
+  })
+  html += '</tbody></table></div>'
+  detailArea.innerHTML = html
+  window.scrollTo({top:0, behavior:'smooth'})
+}
+
+// --- Make payment (quick) ---
+function makePayment(id){
+  const ins = installments.find(i=>i.id===id)
+  if(!ins) return
+  // find next unpaid schedule
+  const next = ins.schedule.find(s=>!s.paid)
+  if(!next) return Swal.fire('Info','Semua cicilan sudah lunas','info')
+  Swal.fire({
+    title: 'Bayar cicilan',
+    html: `Bayar angsuran ke-${next.installmentNo} sejumlah <strong>Rp ${fmt(next.amount)}</strong>?`,
+    showCancelButton: true,
+    confirmButtonText: 'Bayar'
+  }).then(res=>{
+    if(res.isConfirmed){
+      next.paid = true
+      // reduce remaining
+      ins.remaining = Math.max(0, ins.remaining - next.amount)
+      save(KEY_INSTALLMENTS, installments)
+      renderInstallments()
+      viewDetail(id)
+      Swal.fire('Berhasil','Pembayaran dicatat','success')
+    }
+  })
+}
+
+function paySchedule(insId, installmentNo){
+  const ins = installments.find(i=>i.id===insId)
+  if(!ins) return
+  const sched = ins.schedule.find(s=>s.installmentNo===installmentNo)
+  if(!sched) return
+  Swal.fire({
+    title:'Konfirmasi',
+    html:`Bayar angsuran ke-${sched.installmentNo} sejumlah <strong>Rp ${fmt(sched.amount)}</strong>?`,
+    showCancelButton:true,
+  }).then(res=>{
+    if(res.isConfirmed){
+      sched.paid = true
+      ins.remaining = Math.max(0, ins.remaining - sched.amount)
+      save(KEY_INSTALLMENTS, installments)
+      renderInstallments(); viewDetail(insId)
+      Swal.fire('Sukses','Pembayaran dicatat','success')
+    }
+  })
+}
+
+// --- Init ---
+renderAll()
+
+// Expose some functions to window for inline onclick usage
+window.chooseProduct = chooseProduct
+window.deleteProduct = deleteProduct
+window.viewDetail = viewDetail
+window.makePayment = makePayment
+window.paySchedule = paySchedule
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
