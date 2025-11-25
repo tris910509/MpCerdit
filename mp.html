@@ -3,196 +3,405 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aplikasi Pembayaran (Cash / TF / Kredit) — Versi Revisi</title>
+  <title>Sistem Penjualan (Offline & Online) - Demo</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body{padding:20px}
-    .card{margin-bottom:16px}
+    .product-card{min-height:220px}
+    .pointer{cursor:pointer}
+    .small-muted{font-size:0.9rem;color:#666}
+    .invoice-box{border:1px solid #ddd;padding:20px;border-radius:8px}
   </style>
 </head>
 <body>
 <div class="container">
-  <h2 class="mb-3">Aplikasi Pembayaran — Cash / Transfer / Kredit (Revisi)</h2>
-
-  <!-- PILIH PRODUK & METODE PEMBAYARAN -->
-  <div class="card">
-    <div class="card-body">
-      <h5>Pilih Produk</h5>
-      <select id="productSelect" class="form-select mb-3"></select>
-
-      <h5>Pilih Metode Pembayaran</h5>
-      <select id="paymentMethod" class="form-select mb-3">
-        <option value="">-- pilih metode --</option>
-        <option value="cash">Cash</option>
-        <option value="transfer">Transfer (TF)</option>
-        <option value="kredit">Kredit</option>
-      </select>
-
-      <!-- CASH -->
-      <div id="cashBox" style="display:none">
-        <h5>Pembayaran Cash</h5>
-        <div class="mb-2">
-          <label>Total Harga</label>
-          <input id="cashTotal" class="form-control" readonly>
-        </div>
-        <div class="mb-2">
-          <label>Jumlah Pembayaran</label>
-          <input id="cashPaid" type="number" class="form-control">
-        </div>
-        <div class="mb-2">
-          <label>Kembalian</label>
-          <input id="cashChange" class="form-control" readonly>
-        </div>
-        <button class="btn btn-success" id="btnCashPay">Selesaikan Pembayaran</button>
-      </div>
-
-      <!-- TRANSFER -->
-      <div id="tfBox" style="display:none">
-        <h5>Pembayaran Transfer (TF)</h5>
-        <div class="mb-2">
-          <label>Total yang harus dibayar</label>
-          <input id="tfTotal" class="form-control" readonly>
-        </div>
-        <div class="mb-2">
-          <label>Jumlah Transfer</label>
-          <input id="tfPaid" type="number" class="form-control">
-        </div>
-        <div class="mb-2">
-          <label>Upload Bukti Pembayaran</label>
-          <input id="tfProof" type="file" class="form-control">
-        </div>
-        <button class="btn btn-primary mb-2" id="btnTfPay">Konfirmasi Pembayaran</button>
-
-        <div id="offerKreditBox" class="alert alert-warning" style="display:none">
-          Jumlah transfer <b>tidak sesuai</b> dengan total pembayaran.<br>
-          Ingin melanjutkan sebagai <b>Kredit</b>?
-          <br><button class="btn btn-warning mt-2" id="btnConvertKredit">Lanjutkan Kredit</button>
-        </div>
-      </div>
-
-      <!-- KREDIT -->
-      <div id="kreditBox" style="display:none">
-        <h5>Pembayaran Kredit</h5>
-        <div class="mb-2">
-          <label>DP</label>
-          <input id="kreditDp" type="number" class="form-control" value="0">
-        </div>
-        <div class="mb-2">
-          <label>Tenor (bulan)</label>
-          <input id="kreditTenor" type="number" class="form-control" value="12">
-        </div>
-        <button class="btn btn-success" id="btnCreateKredit">Buat Cicilan</button>
-      </div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Sistem Penjualan (Offline & Online) - Demo</h2>
+    <div>
+      <button class="btn btn-outline-primary me-2" id="btn-products">Produk</button>
+      <button class="btn btn-outline-secondary me-2" id="btn-cart">Keranjang <span class="badge bg-danger" id="cart-count">0</span></button>
+      <button class="btn btn-success" id="btn-transactions">Transaksi</button>
     </div>
   </div>
+
+  <div id="main-area"></div>
 </div>
 
+<!-- Templates -->
+<template id="products-template">
+  <div class="row" id="products-row"></div>
+</template>
+
+<template id="transactions-template">
+  <div>
+    <h4>Daftar Transaksi</h4>
+    <div class="mb-3">
+      <button class="btn btn-sm btn-outline-danger" id="clear-data">Clear All Data</button>
+    </div>
+    <div id="transactions-list"></div>
+  </div>
+</template>
+
+<!-- JS -->
 <script>
-// DATA PRODUK
-let produk = [
-  {id:1, nama:"Kulkas 2 Pintu", harga:4500000},
-  {id:2, nama:"TV LED 32\"", harga:2200000},
-  {id:3, nama:"Laptop", harga:6500000}
+// ====== Demo Data & Utilities ======
+const PRODUCTS_KEY = 'demo_products';
+const CART_KEY = 'demo_cart';
+const TX_KEY = 'demo_transactions';
+
+const defaultProducts = [
+  {id:1,name:'Sofa Minimalis',price:1800000,stock:10},
+  {id:2,name:'Meja Tamu',price:750000,stock:15},
+  {id:3,name:'Lampu Gantung',price:350000,stock:20},
+  {id:4,name:'Rak Buku',price:900000,stock:5}
 ];
 
-const productSelect = document.getElementById('productSelect');
-const payMethod = document.getElementById('paymentMethod');
+// localStorage helpers
+function save(key,val){localStorage.setItem(key,JSON.stringify(val));}
+function load(key, fallback){const v = localStorage.getItem(key); return v?JSON.parse(v):fallback;}
 
-function loadProducts(){
-  productSelect.innerHTML="";
-  produk.forEach(p=>{
-    const o = document.createElement('option');
-    o.value = p.id;
-    o.textContent = `${p.nama} — Rp ${p.harga.toLocaleString('id-ID')}`;
-    productSelect.appendChild(o);
+// initialize
+if(!localStorage.getItem(PRODUCTS_KEY)) save(PRODUCTS_KEY, defaultProducts);
+if(!localStorage.getItem(CART_KEY)) save(CART_KEY, []);
+if(!localStorage.getItem(TX_KEY)) save(TX_KEY, []);
+
+// ====== UI Rendering ======
+const main = document.getElementById('main-area');
+const cartCount = document.getElementById('cart-count');
+
+function renderProducts(){
+  const tpl = document.getElementById('products-template').content.cloneNode(true);
+  const row = tpl.getElementById('products-row');
+  const products = load(PRODUCTS_KEY,[]);
+  products.forEach(p=>{
+    const col = document.createElement('div'); col.className='col-md-3 mb-3';
+    col.innerHTML = `
+      <div class="card product-card">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${p.name}</h5>
+          <p class="card-text small-muted">Harga: Rp ${formatIDR(p.price)}<br>Stok: ${p.stock}</p>
+          <div class="mt-auto d-flex gap-2">
+            <input type="number" min="1" value="1" class="form-control qty-input" style="width:80px">
+            <button class="btn btn-primary btn-add-cart">Tambah</button>
+          </div>
+        </div>
+      </div>
+    `;
+    // attach events later
+    row.appendChild(col);
+    const btn = col.querySelector('.btn-add-cart');
+    const qtyInput = col.querySelector('.qty-input');
+    btn.addEventListener('click', ()=>{
+      addToCart(p.id, parseInt(qtyInput.value||1));
+    });
+  });
+  main.innerHTML=''; main.appendChild(tpl);
+}
+
+function renderCartModal(){
+  const cart = load(CART_KEY,[]);
+  const products = load(PRODUCTS_KEY,[]);
+  let html = `
+    <h4>Keranjang</h4>
+    <div id="cart-area"></div>
+  `;
+  main.innerHTML = html;
+  const cartArea = document.getElementById('cart-area');
+  if(cart.length===0){cartArea.innerHTML='<div class="alert alert-info">Keranjang kosong</div>'; return}
+  let total=0;
+  const table = document.createElement('table'); table.className='table';
+  table.innerHTML = `<thead><tr><th>Produk</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  cart.forEach(item=>{
+    const p = products.find(x=>x.id===item.productId);
+    const sub = p.price * item.qty; total += sub;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td>Rp ${formatIDR(p.price)}</td>
+      <td><input class="form-control form-control-sm cart-qty" data-id="${item.productId}" style="width:80px" type="number" value="${item.qty}"></td>
+      <td>Rp ${formatIDR(sub)}</td>
+      <td><button class="btn btn-sm btn-danger remove-item" data-id="${item.productId}"><i class="fa fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  cartArea.appendChild(table);
+  const summary = document.createElement('div');
+  summary.className='d-flex justify-content-between align-items-center';
+  summary.innerHTML = `<div><strong>Total:</strong> Rp ${formatIDR(total)}</div><div><button class="btn btn-secondary me-2" id="continue-shopping">Lanjutkan Belanja</button><button class="btn btn-success" id="checkout">Checkout</button></div>`;
+  cartArea.appendChild(summary);
+
+  // events
+  cartArea.querySelectorAll('.remove-item').forEach(b=>b.addEventListener('click',e=>{removeFromCart(parseInt(e.target.closest('button').dataset.id));}));
+  cartArea.querySelectorAll('.cart-qty').forEach(inp=>inp.addEventListener('change',e=>{updateCartQty(parseInt(e.target.dataset.id), parseInt(e.target.value||1));}));
+  document.getElementById('continue-shopping').addEventListener('click', ()=>{renderProducts();});
+  document.getElementById('checkout').addEventListener('click', ()=>{renderCheckout(total)});
+}
+
+function renderCheckout(total){
+  const tpl = document.createElement('div');
+  tpl.innerHTML = `
+    <h4>Checkout</h4>
+    <div class="invoice-box mb-3">
+      <div><strong>Total:</strong> Rp <span id="checkout-total">${formatIDR(total)}</span></div>
+      <div class="mt-2">
+        <label class="form-label">Nama Pembeli</label>
+        <input id="buyer-name" class="form-control" placeholder="Nama lengkap">
+      </div>
+      <div class="mt-2">
+        <label class="form-label">Metode Pembayaran</label>
+        <select id="payment-method" class="form-select">
+          <option value="cash">Cash</option>
+          <option value="transfer">Transfer</option>
+          <option value="credit">Kredit</option>
+        </select>
+      </div>
+      <div id="method-area" class="mt-3"></div>
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-secondary" id="back-to-cart">Kembali</button>
+        <button class="btn btn-primary" id="place-order">Buat Pesanan</button>
+      </div>
+    </div>
+  `;
+  main.innerHTML=''; main.appendChild(tpl);
+
+  const methodArea = document.getElementById('method-area');
+  function showMethodUI(){
+    const m = document.getElementById('payment-method').value;
+    methodArea.innerHTML='';
+    if(m==='cash'){
+      methodArea.innerHTML = `
+        <div class="row">
+          <div class="col-md-4">
+            <label class="form-label">Bayar (Tunai)</label>
+            <input id="cash-paid" type="number" class="form-control" placeholder="Masukkan jumlah pembayaran">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Uang Muka (opsional)</label>
+            <input id="cash-dp" type="number" class="form-control" placeholder="Uang muka">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <div><small class="small-muted">Keterangan: jika bayar >= total maka status LUNAS.</small></div>
+          </div>
+        </div>
+      `;
+    } else if(m==='transfer'){
+      methodArea.innerHTML = `
+        <div>
+          <p class="small-muted">Silakan transfer ke rekening: <strong>1234-5678-901 (BCA) a.n Demo</strong></p>
+          <label class="form-label">Jumlah yang ditransfer</label>
+          <input id="transfer-amount" type="number" class="form-control" placeholder="Masukkan nominal transfer">
+          <label class="form-label mt-2">Upload Bukti Transfer (opsional)</label>
+          <input id="transfer-proof" type="file" accept="image/*" class="form-control">
+          <div class="form-text">Jika jumlah cocok, sistem akan tandai LUNAS. Jika tidak cocok, Anda bisa pilih lanjut kredit.</div>
+        </div>
+      `;
+    } else if(m==='credit'){
+      methodArea.innerHTML = `
+        <div>
+          <label class="form-label">DP (Uang Muka)</label>
+          <input id="credit-dp" type="number" class="form-control" placeholder="Masukkan DP">
+          <label class="form-label mt-2">Pilih Tenor</label>
+          <select id="credit-tenor" class="form-select">
+            <option value="1">1 Bulan</option>
+            <option value="3">3 Bulan</option>
+            <option value="6">6 Bulan</option>
+            <option value="9">9 Bulan</option>
+            <option value="12">12 Bulan</option>
+          </select>
+          <div class="mt-3 small-muted">Sistem akan membuat jadwal angsuran otomatis (sisa dibagi jumlah bulan).</div>
+        </div>
+      `;
+    }
+  }
+  document.getElementById('payment-method').addEventListener('change', showMethodUI);
+  showMethodUI();
+
+  document.getElementById('back-to-cart').addEventListener('click', ()=>{renderCartModal();});
+  document.getElementById('place-order').addEventListener('click', ()=>{placeOrder(total)});
+}
+
+function renderTransactions(){
+  const tpl = document.getElementById('transactions-template').content.cloneNode(true);
+  main.innerHTML=''; main.appendChild(tpl);
+  const txList = document.getElementById('transactions-list');
+  const txs = load(TX_KEY,[]).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if(txs.length===0){txList.innerHTML='<div class="alert alert-info">Belum ada transaksi</div>'; return}
+  txs.forEach(tx=>{
+    const card = document.createElement('div'); card.className='card mb-2';
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h5 class="card-title">#${tx.id} — ${tx.buyer || '-'} </h5>
+            <div class="small-muted">Metode: ${tx.method} | Status: <strong>${tx.status}</strong></div>
+            <div class="mt-1">Total: Rp ${formatIDR(tx.total)}</div>
+            ${tx.method==='credit'?`<div>Tenor: ${tx.tenor} bulan | DP Rp ${formatIDR(tx.dp)}</div>`:''}
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-primary me-1 btn-view" data-id="${tx.id}">Lihat</button>
+            ${tx.method==='credit'?`<button class="btn btn-sm btn-success me-1 btn-pay-installment" data-id="${tx.id}">Bayar Cicilan</button>`:''}
+            <button class="btn btn-sm btn-danger btn-delete" data-id="${tx.id}">Hapus</button>
+          </div>
+        </div>
+      </div>
+    `;
+    txList.appendChild(card);
+  });
+  document.getElementById('clear-data').addEventListener('click',()=>{
+    Swal.fire({title:'Hapus semua data?',icon:'warning',showCancelButton:true}).then(r=>{if(r.isConfirmed){localStorage.removeItem(TX_KEY); save(TX_KEY,[]); renderTransactions();}})
+  });
+
+  txList.querySelectorAll('.btn-view').forEach(b=>b.addEventListener('click',e=>{viewTransaction(parseInt(e.target.dataset.id));}));
+  txList.querySelectorAll('.btn-delete').forEach(b=>b.addEventListener('click',e=>{deleteTransaction(parseInt(e.target.dataset.id));}));
+  txList.querySelectorAll('.btn-pay-installment').forEach(b=>b.addEventListener('click',e=>{payInstallment(parseInt(e.target.dataset.id));}));
+}
+
+function viewTransaction(id){
+  const txs = load(TX_KEY,[]);
+  const tx = txs.find(t=>t.id===id);
+  if(!tx) return Swal.fire('Not found');
+  let html = `
+    <h4>Transaksi #${tx.id}</h4>
+    <div class="invoice-box">
+      <div><strong>Pembeli:</strong> ${tx.buyer||'-'}</div>
+      <div><strong>Tanggal:</strong> ${tx.createdAt}</div>
+      <div><strong>Metode:</strong> ${tx.method}</div>
+      <div><strong>Total:</strong> Rp ${formatIDR(tx.total)}</div>
+      ${tx.method==='transfer'?`<div><strong>Transfer Dibayar:</strong> Rp ${formatIDR(tx.transferAmount||0)}</div>`:''}
+      ${tx.method==='credit'?`<div><strong>DP:</strong> Rp ${formatIDR(tx.dp)} | <strong>Tenor:</strong> ${tx.tenor} bulan</div>`:''}
+      <hr>
+      <h6>Item</h6>
+      <ul>
+        ${tx.items.map(it=>`<li>${it.name} x ${it.qty} — Rp ${formatIDR(it.price)} (subtotal Rp ${formatIDR(it.price*it.qty)})</li>`).join('')}
+      </ul>
+      ${tx.method==='credit'?`<hr><h6>Jadwal Cicilan</h6><ol>${tx.schedule.map(s=>`<li>${s.monthLabel} — Rp ${formatIDR(s.amount)} — Status: ${s.paid?'<span class="badge bg-success">Lunas</span>':'<span class="badge bg-warning">Belum</span>'}</li>`).join('')}</ol>`:''}
+    </div>
+  `;
+  main.innerHTML = html;
+}
+
+function payInstallment(id){
+  const txs = load(TX_KEY,[]);
+  const tx = txs.find(t=>t.id===id);
+  if(!tx || tx.method!=='credit') return Swal.fire('Tidak tersedia');
+  // find first unpaid
+  const idx = tx.schedule.findIndex(s=>!s.paid);
+  if(idx===-1) return Swal.fire('Sudah lunas');
+  Swal.fire({
+    title:`Bayar cicilan bulan ${tx.schedule[idx].monthLabel}?`,
+    input:'number',
+    inputLabel:`Jumlah harus Rp ${formatIDR(tx.schedule[idx].amount)}`,
+    inputValue:tx.schedule[idx].amount,
+    showCancelButton:true
+  }).then(res=>{
+    if(res.isConfirmed){
+      const paid = Number(res.value);
+      if(paid>=tx.schedule[idx].amount){
+        tx.schedule[idx].paid=true; tx.schedule[idx].paidAt = new Date().toLocaleString();
+        // check complete
+        if(tx.schedule.every(s=>s.paid)) tx.status='LUNAS';
+        save(TX_KEY, txs); Swal.fire('Terima kasih','Pembayaran tercatat','success'); renderTransactions();
+      } else {
+        Swal.fire('Jumlah kurang','Pembayaran tidak mencukupi','error');
+      }
+    }
   });
 }
-loadProducts();
 
-// SWITCH BOX
-payMethod.addEventListener('change',()=>{
-  document.getElementById('cashBox').style.display = 'none';
-  document.getElementById('tfBox').style.display = 'none';
-  document.getElementById('kreditBox').style.display = 'none';
-
-  let p = produk.find(x=>x.id==productSelect.value);
+// ====== Cart operations ======
+function addToCart(productId, qty){
+  const products = load(PRODUCTS_KEY,[]);
+  const p = products.find(x=>x.id===productId);
   if(!p) return;
+  let cart = load(CART_KEY,[]);
+  const existing = cart.find(c=>c.productId===productId);
+  if(existing){ existing.qty += qty; } else { cart.push({productId, qty}); }
+  save(CART_KEY, cart); updateCartCount(); Swal.fire({toast:true,position:'top-end',timer:1200,showConfirmButton:false,title:'Ditambahkan ke keranjang'});
+}
+function removeFromCart(productId){ let cart = load(CART_KEY,[]); cart = cart.filter(c=>c.productId!==productId); save(CART_KEY,cart); renderCartModal(); updateCartCount(); }
+function updateCartQty(productId, qty){ let cart = load(CART_KEY,[]); const it = cart.find(c=>c.productId===productId); if(it){ it.qty = qty; save(CART_KEY,cart); renderCartModal(); updateCartCount(); } }
+function updateCartCount(){ const cart = load(CART_KEY,[]); const count = cart.reduce((s,i)=>s+i.qty,0); cartCount.textContent = count; }
 
-  if(payMethod.value==='cash'){
-    document.getElementById('cashBox').style.display='block';
-    document.getElementById('cashTotal').value = p.harga;
+// ====== Place Order ======
+function placeOrder(total){
+  const buyer = document.getElementById('buyer-name').value||'-';
+  const method = document.getElementById('payment-method').value;
+  const cart = load(CART_KEY,[]);
+  const products = load(PRODUCTS_KEY,[]);
+  if(cart.length===0) return Swal.fire('Keranjang kosong');
+  const items = cart.map(c=>{const p=products.find(x=>x.id===c.productId); return {productId:c.productId, name:p.name, price:p.price, qty:c.qty}});
+
+  // common tx object
+  const txs = load(TX_KEY,[]);
+  const newId = (txs.length?txs[txs.length-1].id+1:1);
+  let tx = {id:newId, buyer, method, total, items, createdAt: new Date().toLocaleString(), status:'PENDING'};
+
+  if(method==='cash'){
+    const paid = Number(document.getElementById('cash-paid').value||0);
+    const dp = Number(document.getElementById('cash-dp')?.value||0);
+    if(paid>0 && paid>=total){ tx.status='LUNAS'; tx.paidAmount = paid; tx.change = paid - total; }
+    else if(dp>0 && dp<total){ tx.status='DP'; tx.dp = dp; tx.remaining = total-dp; }
+    else { tx.status = 'MENUNGGU BAYAR'; }
+  } else if(method==='transfer'){
+    const amount = Number(document.getElementById('transfer-amount')?.value||0);
+    const fileInput = document.getElementById('transfer-proof');
+    tx.transferAmount = amount;
+    if(amount>0 && amount>=total){ tx.status='LUNAS'; }
+    else if(amount>0 && amount<total){ tx.status='TRANSFER_TIDAK_COCOK'; }
+    else { tx.status='MENUNGGU_TRANSFER'; }
+    if(fileInput && fileInput.files && fileInput.files[0]){
+      const f = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e){ tx.transferProof = e.target.result; txs.push(tx); save(TX_KEY, txs); save(CART_KEY,[]); updateCartCount(); Swal.fire('Sukses','Transaksi tersimpan','success').then(()=>renderTransactions()); }
+      reader.readAsDataURL(f); return; // wait for reader
+    }
+  } else if(method==='credit'){
+    const dp = Number(document.getElementById('credit-dp')?.value||0);
+    const tenor = Number(document.getElementById('credit-tenor')?.value||0);
+    const remaining = total - dp; if(remaining<0) remaining=0;
+    const perMonth = Math.ceil(remaining/tenor);
+    tx.dp = dp; tx.tenor = tenor; tx.remaining = remaining; tx.monthly = perMonth; tx.method='credit';
+    // build schedule
+    tx.schedule = [];
+    const start = new Date();
+    for(let i=1;i<=tenor;i++){
+      const due = new Date(start.getFullYear(), start.getMonth()+i, start.getDate());
+      tx.schedule.push({month:i, monthLabel:due.toLocaleDateString(), amount: perMonth, paid:false});
+    }
+    tx.status = 'CREDIT_ACTIVE';
   }
 
-  if(payMethod.value==='transfer'){
-    document.getElementById('tfBox').style.display='block';
-    document.getElementById('tfTotal').value = p.harga;
-  }
+  // push tx if not returned earlier
+  txs.push(tx); save(TX_KEY, txs);
+  // clear cart
+  save(CART_KEY, []); updateCartCount(); Swal.fire('Sukses','Transaksi tersimpan','success').then(()=>renderTransactions());
+}
 
-  if(payMethod.value==='kredit'){
-    document.getElementById('kreditBox').style.display='block';
-  }
-});
+function deleteTransaction(id){
+  const txs = load(TX_KEY,[]);
+  const idx = txs.findIndex(t=>t.id===id); if(idx===-1) return;
+  Swal.fire({title:'Hapus transaksi?',icon:'warning',showCancelButton:true}).then(r=>{ if(r.isConfirmed){ txs.splice(idx,1); save(TX_KEY,txs); renderTransactions(); }});
+}
 
-/* =============================
-   PEMBAYARAN CASH
-============================= */
-const cashPaid = document.getElementById('cashPaid');
-cashPaid.addEventListener('input',()=>{
-  let total = Number(document.getElementById('cashTotal').value);
-  let bayar = Number(cashPaid.value);
-  let kembali = bayar - total;
-  document.getElementById('cashChange').value = kembali >= 0 ? kembali : 0;
-});
+// ====== Helpers ======
+function formatIDR(n){ return new Intl.NumberFormat('id-ID').format(n); }
 
-document.getElementById('btnCashPay').addEventListener('click',()=>{
-  let total = Number(document.getElementById('cashTotal').value);
-  let bayar = Number(cashPaid.value);
+// initial bindings
+document.getElementById('btn-products').addEventListener('click', renderProducts);
+document.getElementById('btn-cart').addEventListener('click', renderCartModal);
+document.getElementById('btn-transactions').addEventListener('click', renderTransactions);
+updateCartCount(); renderProducts();
 
-  if(bayar < total)
-    return Swal.fire('Pembayaran Kurang','Jumlah pembayaran belum mencukupi','error');
+// expose some functions for template usage
+window.renderProducts = renderProducts;
+window.renderCartModal = renderCartModal;
+window.renderTransactions = renderTransactions;
 
-  Swal.fire('Berhasil','Status Pembayaran: <b>LUNAS</b>','success');
-});
-
-/* =============================
-   PEMBAYARAN TRANSFER (TF)
-============================= */
-document.getElementById('btnTfPay').addEventListener('click',()=>{
-  const total = Number(document.getElementById('tfTotal').value);
-  const bayar = Number(document.getElementById('tfPaid').value);
-  const bukti = document.getElementById('tfProof').files.length;
-
-  if(bayar === total){
-    if(!bukti)
-      return Swal.fire('Bukti diperlukan','Upload bukti pembayaran','warning');
-
-    Swal.fire('Pembayaran Berhasil','Status: <b>LUNAS</b>','success');
-  } else {
-    document.getElementById('offerKreditBox').style.display='block';
-  }
-});
-
-document.getElementById('btnConvertKredit').addEventListener('click',()=>{
-  payMethod.value = 'kredit';
-  payMethod.dispatchEvent(new Event('change'));
-  document.getElementById('offerKreditBox').style.display='none';
-});
-
-/* =============================
-   PEMBAYARAN KREDIT
-============================= */
-document.getElementById('btnCreateKredit').addEventListener('click',()=>{
-  let dp = Number(document.getElementById('kreditDp').value);
-  let tenor = Number(document.getElementById('kreditTenor').value);
-  let p = produk.find(x=>x.id==productSelect.value);
-
-  if(dp > p.harga)
-    return Swal.fire('DP Terlalu Besar','DP tidak boleh melebihi harga produk','error');
-
-  Swal.fire('Cicilan Dibuat',`Cicilan dibuat dengan tenor ${tenor} bulan`, 'success');
-});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
