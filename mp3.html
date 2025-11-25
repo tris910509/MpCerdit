@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Multi Role</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        body { background: #f5f5f5; }
+        .sidebar { height: 100vh; background: #1e1e2d; color: white; }
+        .sidebar a { color: #d1d1d1; text-decoration: none; display: block; padding: 12px 20px; }
+        .sidebar a:hover { background:#34344a; color:#fff; }
+        .role-badge { font-size:14px; }
+        .content { padding: 25px; }
+    </style>
+</head>
+<body>
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h4 class="text-center py-3">Dashboard</h4>
+        <div id="menuList"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content flex-grow-1">
+        <h2 id="roleTitle">Role Dashboard</h2>
+        <p class="text-muted">Menu akan menyesuaikan sesuai role yang login.</p>
+        <hr>
+        <div id="contentArea">
+            <h5>Selamat datang di Dashboard Sistem Penjualan</h5>
+            <p>Pilih menu di samping untuk mulai mengelola data.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Role aktif: superadmin, admin, operator, user
+let currentRole = "superadmin"; // ganti untuk testing
+
+document.getElementById("roleTitle").innerHTML = `Dashboard: <span class='badge bg-primary role-badge'>${currentRole}</span>`;
+
+// Menu berdasarkan role
+const menus = {
+    superadmin: [
+        { name: "Manajemen Users", icon: "fa-users" },
+        { name: "Manajemen Supplier", icon: "fa-truck" },
+        { name: "Manajemen Kategori", icon: "fa-tags" },
+        { name: "Manajemen Produk", icon: "fa-box" },
+        { name: "Transaksi", icon: "fa-cart-shopping" },
+        { name: "Pembayaran", icon: "fa-money-check" },
+        { name: "Laporan Sistem", icon: "fa-chart-line" },
+        { name: "Settings", icon: "fa-gear" }
+    ],
+    admin: [
+        { name: "Manajemen Supplier", icon: "fa-truck" },
+        { name: "Manajemen Produk", icon: "fa-box" },
+        { name: "Transaksi", icon: "fa-cart-shopping" },
+        { name: "Pembayaran", icon: "fa-money-check" },
+        { name: "Laporan", icon: "fa-file" }
+    ],
+    operator: [
+        { name: "Input Transaksi", icon: "fa-keyboard" },
+        { name: "Pembayaran", icon: "fa-money-bill" },
+        { name: "Status Order", icon: "fa-list-check" }
+    ],
+    user: [
+        { name: "Profil Saya", icon: "fa-user" },
+        { name: "Riwayat Pembelian", icon: "fa-bag-shopping" },
+        { name: "Keranjang", icon: "fa-cart-plus" }
+    ]
+};
+
+// Generate menu sesuai role
+let menuArea = document.getElementById("menuList");
+menuArea.innerHTML = menus[currentRole]
+    .map(m => `<a href='#'><i class='fa ${m.icon}'></i> ${m.name}</a>`)
+    .join("");
+</script>
+
+</body>
+</html>
