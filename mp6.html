@@ -2,465 +2,408 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Sistem Pelayanan Penjualan (Single File)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://kit.fontawesome.com/a2d9d6f3b9.js" crossorigin="anonymous"></script>
   <style>
-    body { padding: 1.5rem; }
-    .pointer { cursor: pointer; }
-    .img-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px }
-    .small-muted { font-size:0.85rem; color:#666 }
+    body{padding:20px}
+    .pointer{cursor:pointer}
+    .small-img{width:40px;height:40px;object-fit:cover;border-radius:4px}
+    .tab-card{padding:15px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
   </style>
 </head>
-<body>
-  <div class="container-fluid">
-    <h2 class="mb-3">Sistem Pelayanan Penjualan (HTML + JavaScript, localStorage)</h2>
-    <p class="small-muted">Fitur: Users, Supplier, Kategori, Item, Produk, Transaksi (Member / Umum), Pembayaran & Laporan. Semua data tersimpan di <code>localStorage</code>. CRUD tersedia.</p>
+<body class="bg-light">
+<div class="container">
+  <h2 class="mb-3">Sistem Pelayanan Penjualan (HTML + JavaScript)</h2>
+  <p class="text-muted">CRUD sederhana + Transaksi (Member/Umum) + Pembayaran (Cash/TF/Kredit). Data disimpan di <code>localStorage</code>.</p>
 
-    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">Users</button></li>
-      <li class="nav-item"><button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button">Suppliers</button></li>
-      <li class="nav-item"><button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">Kategori</button></li>
-      <li class="nav-item"><button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button">Item</button></li>
-      <li class="nav-item"><button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button">Produk</button></li>
-      <li class="nav-item"><button class="nav-link" id="trans-tab" data-bs-toggle="tab" data-bs-target="#trans" type="button">Transaksi</button></li>
-      <li class="nav-item"><button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button">Laporan</button></li>
-    </ul>
+  <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-users">Users</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-suppliers">Suppliers</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cats">Kategori</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-items">Item</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-products">Produk</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-trans">Transaksi</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-reports">Laporan</a></li>
+  </ul>
 
-    <div class="tab-content mt-3">
-      <!-- USERS -->
-      <div class="tab-pane fade show active" id="users">
-        <div class="d-flex justify-content-between mb-2">
-          <h5>Manajemen Users</h5>
-          <button class="btn btn-primary" onclick="openUserForm()">Tambah User</button>
+  <div class="tab-content">
+    <!-- USERS -->
+    <div class="tab-pane fade show active" id="tab-users">
+      <div class="tab-card">
+        <h5>Manajemen User</h5>
+        <form id="formUser" class="row g-2 align-items-end">
+          <input type="hidden" id="userIndex">
+          <div class="col-md-2"><label class="form-label">ID</label><input class="form-control" id="userId" required></div>
+          <div class="col-md-3"><label class="form-label">Nama</label><input class="form-control" id="userName" required></div>
+          <div class="col-md-2"><label class="form-label">NIK</label><input class="form-control" id="userNIK"></div>
+          <div class="col-md-2"><label class="form-label">HP</label><input class="form-control" id="userHP"></div>
+          <div class="col-md-2"><label class="form-label">Photo URL</label><input class="form-control" id="userPhoto"></div>
+          <div class="col-md-12"><label class="form-label">Alamat</label><input class="form-control" id="userAlamat"></div>
+          <div class="col-md-12 text-end mt-2">
+            <button class="btn btn-primary" type="submit">Simpan</button>
+            <button class="btn btn-secondary" type="button" id="resetUser">Reset</button>
+          </div>
+        </form>
+        <hr>
+        <div class="table-responsive">
+          <table class="table table-striped table-sm" id="tableUsers"><thead><tr><th>Photo</th><th>ID</th><th>Nama</th><th>NIK</th><th>HP</th><th>Alamat</th><th>Aksi</th></tr></thead><tbody></tbody></table>
         </div>
-        <div id="users-list"></div>
       </div>
+    </div>
 
-      <!-- SUPPLIERS -->
-      <div class="tab-pane fade" id="suppliers">
-        <div class="d-flex justify-content-between mb-2">
-          <h5>Manajemen Supplier</h5>
-          <button class="btn btn-primary" onclick="openSupplierForm()">Tambah Supplier</button>
-        </div>
-        <div id="suppliers-list"></div>
+    <!-- SUPPLIERS -->
+    <div class="tab-pane fade" id="tab-suppliers">
+      <div class="tab-card">
+        <h5>Manajemen Supplier</h5>
+        <form id="formSupplier" class="row g-2 align-items-end">
+          <input type="hidden" id="supplierIndex">
+          <div class="col-md-3"><label class="form-label">ID</label><input class="form-control" id="supplierId" required></div>
+          <div class="col-md-4"><label class="form-label">Nama Perusahaan</label><input class="form-control" id="supplierName" required></div>
+          <div class="col-md-3"><label class="form-label">HP</label><input class="form-control" id="supplierHP"></div>
+          <div class="col-md-12"><label class="form-label">Keterangan</label><input class="form-control" id="supplierKeterangan"></div>
+          <div class="col-md-12 text-end mt-2"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-secondary" type="button" id="resetSupplier">Reset</button></div>
+        </form>
+        <hr>
+        <table class="table table-striped table-sm" id="tableSuppliers"><thead><tr><th>ID</th><th>Nama</th><th>HP</th><th>Keterangan</th><th>Aksi</th></tr></thead><tbody></tbody></table>
       </div>
+    </div>
 
-      <!-- CATEGORIES -->
-      <div class="tab-pane fade" id="categories">
-        <div class="d-flex justify-content-between mb-2">
-          <h5>Manajemen Kategori</h5>
-          <button class="btn btn-primary" onclick="openCategoryForm()">Tambah Kategori</button>
-        </div>
-        <div id="categories-list"></div>
+    <!-- CATEGORIES -->
+    <div class="tab-pane fade" id="tab-cats">
+      <div class="tab-card">
+        <h5>Manajemen Kategori</h5>
+        <form id="formCat" class="row g-2 align-items-end">
+          <input type="hidden" id="catIndex">
+          <div class="col-md-4"><label class="form-label">ID</label><input class="form-control" id="catId" required></div>
+          <div class="col-md-6"><label class="form-label">Nama</label><input class="form-control" id="catName" required></div>
+          <div class="col-md-12 text-end mt-2"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-secondary" type="button" id="resetCat">Reset</button></div>
+        </form>
+        <hr>
+        <table class="table table-striped table-sm" id="tableCats"><thead><tr><th>ID</th><th>Nama</th><th>Aksi</th></tr></thead><tbody></tbody></table>
       </div>
+    </div>
 
-      <!-- ITEMS -->
-      <div class="tab-pane fade" id="items">
-        <div class="d-flex justify-content-between mb-2">
-          <h5>Manajemen Item</h5>
-          <button class="btn btn-primary" onclick="openItemForm()">Tambah Item</button>
-        </div>
-        <div id="items-list"></div>
+    <!-- ITEMS -->
+    <div class="tab-pane fade" id="tab-items">
+      <div class="tab-card">
+        <h5>Manajemen Item</h5>
+        <form id="formItem" class="row g-2 align-items-end">
+          <input type="hidden" id="itemIndex">
+          <div class="col-md-4"><label class="form-label">ID</label><input class="form-control" id="itemId" required></div>
+          <div class="col-md-6"><label class="form-label">Nama Item</label><input class="form-control" id="itemName" required></div>
+          <div class="col-md-12 text-end mt-2"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-secondary" type="button" id="resetItem">Reset</button></div>
+        </form>
+        <hr>
+        <table class="table table-striped table-sm" id="tableItems"><thead><tr><th>ID</th><th>Nama</th><th>Aksi</th></tr></thead><tbody></tbody></table>
       </div>
+    </div>
 
-      <!-- PRODUCTS -->
-      <div class="tab-pane fade" id="products">
-        <div class="d-flex justify-content-between mb-2">
-          <h5>Manajemen Produk</h5>
-          <button class="btn btn-primary" onclick="openProductForm()">Tambah Produk</button>
-        </div>
-        <div id="products-list"></div>
+    <!-- PRODUCTS -->
+    <div class="tab-pane fade" id="tab-products">
+      <div class="tab-card">
+        <h5>Manajemen Produk</h5>
+        <form id="formProduct" class="row g-2 align-items-end">
+          <input type="hidden" id="prodIndex">
+          <div class="col-md-2"><label class="form-label">ID</label><input class="form-control" id="prodId" required></div>
+          <div class="col-md-3"><label class="form-label">Nama Produk</label><input class="form-control" id="prodName" required></div>
+          <div class="col-md-3"><label class="form-label">Supplier</label><select class="form-select" id="prodSupplier"></select></div>
+          <div class="col-md-2"><label class="form-label">Kategori</label><select class="form-select" id="prodCat"></select></div>
+          <div class="col-md-2"><label class="form-label">Item</label><select class="form-select" id="prodItem"></select></div>
+          <div class="col-md-2"><label class="form-label">Stok</label><input class="form-control" id="prodStock" type="number" min="0" value="0"></div>
+          <div class="col-md-3"><label class="form-label">Harga (Rp)</label><input class="form-control" id="prodPrice" type="number" min="0" value="0"></div>
+          <div class="col-md-12 text-end mt-2"><button class="btn btn-primary" type="submit">Simpan</button><button class="btn btn-secondary" type="button" id="resetProd">Reset</button></div>
+        </form>
+        <hr>
+        <div class="table-responsive"><table class="table table-striped table-sm" id="tableProducts"><thead><tr><th>ID</th><th>Nama</th><th>Supplier</th><th>Kategori</th><th>Item</th><th>Stok</th><th>Harga</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
       </div>
+    </div>
 
-      <!-- TRANSAKSI -->
-      <div class="tab-pane fade" id="trans">
+    <!-- TRANSACTIONS -->
+    <div class="tab-pane fade" id="tab-trans">
+      <div class="tab-card">
+        <h5>Transaksi Penjualan</h5>
         <div class="row">
-          <div class="col-lg-7">
-            <h5>Buat Transaksi</h5>
-            <div class="card mb-3 p-3">
-              <div class="mb-2">
-                <label class="form-label">Tipe Pelanggan</label>
-                <select id="trx-customer-type" class="form-select" onchange="onCustomerTypeChange()">
-                  <option value="member">Member</option>
-                  <option value="umum">Umum</option>
-                </select>
+          <div class="col-md-6">
+            <div class="mb-2">
+              <label class="form-label">Tipe Transaksi</label>
+              <select class="form-select" id="transType"><option value="umum">Umum</option><option value="member">Member</option></select>
+            </div>
+            <div id="memberBlock" class="mb-2" style="display:none">
+              <label class="form-label">Pilih Member</label>
+              <select class="form-select" id="selectMember"><option value="">--Pilih--</option></select>
+            </div>
+            <div id="umumBlock" class="mb-2" style="display:block">
+              <label class="form-label">Nama Pelanggan (Umum)</label>
+              <input class="form-control" id="umumName">
+            </div>
+            <hr>
+            <label class="form-label">Tambah Produk ke Keranjang</label>
+            <div class="input-group mb-2">
+              <select class="form-select" id="selectProduct"><option value="">--Pilih Produk--</option></select>
+              <input class="form-control" id="cartQty" type="number" value="1" min="1" style="max-width:100px">
+              <button class="btn btn-success" id="addToCart">Tambah</button>
+            </div>
+
+            <div class="mb-2">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="discountToggle">
+                <label class="form-check-label" for="discountToggle">Gunakan Diskon</label>
               </div>
-
-              <div id="member-block" class="mb-2">
-                <label class="form-label">Pilih Member</label>
-                <select id="member-select" class="form-select"></select>
-              </div>
-
-              <div id="umum-block" class="mb-3" style="display:none">
-                <label class="form-label">Data Pelanggan (Umum)</label>
-                <input id="umum-name" class="form-control mb-1" placeholder="Nama">
-                <input id="umum-hp" class="form-control mb-1" placeholder="No HP">
-                <input id="umum-alamat" class="form-control" placeholder="Alamat">
-              </div>
-
-              <hr>
-
-              <div class="mb-2 d-flex gap-2">
-                <select id="product-select" class="form-select"></select>
-                <input id="product-qty" type="number" min="1" value="1" class="form-control" style="max-width:120px">
-                <button class="btn btn-success" onclick="addToCart()">Tambah</button>
-              </div>
-
-              <div id="cart-list"></div>
-
-              <div class="mt-2">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" id="discount-enable" onchange="renderCart()">
-                  <label class="form-check-label">Gunakan Diskon</label>
-                </div>
-                <div id="discount-controls" style="display:none" class="mt-2 d-flex gap-2 align-items-center">
-                  <select id="discount-type" class="form-select" style="max-width:140px">
-                    <option value="percent">% (Persen)</option>
-                    <option value="amount">Rp (Nominal)</option>
-                  </select>
-                  <input id="discount-value" type="number" class="form-control" placeholder="Nilai diskon" style="max-width:180px" oninput="renderCart()">
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <div class="d-flex justify-content-between"><strong>Subtotal:</strong><span id="subtotal">0</span></div>
-                <div class="d-flex justify-content-between"><strong>Diskon:</strong><span id="discount-amount">0</span></div>
-                <div class="d-flex justify-content-between"><strong>Total:</strong><span id="grandtotal">0</span></div>
-              </div>
-
-              <hr>
-              <div class="mb-2">
-                <label class="form-label">Metode Pembayaran</label>
-                <select id="payment-method" class="form-select">
-                  <option value="cash">Cash</option>
-                  <option value="tf">Transfer</option>
-                  <option value="kredit">Kredit</option>
-                </select>
-              </div>
-              <div class="d-flex gap-2">
-                <input id="paid-amount" type="number" class="form-control" placeholder="Jumlah dibayar (opsional)">
-                <button class="btn btn-primary" onclick="checkout()">Checkout</button>
+              <div id="discountBox" style="display:none" class="mt-2">
+                <select class="form-select mb-2" id="discountType"><option value="percent">Persen (%)</option><option value="rupiah">Rupiah (Rp)</option></select>
+                <input class="form-control" id="discountValue" placeholder="Masukkan nilai diskon">
               </div>
             </div>
-          </div>
 
-          <div class="col-lg-5">
-            <h5>Daftar Transaksi</h5>
-            <div id="transactions-list"></div>
+            <hr>
+            <h6>Ringkasan</h6>
+            <div id="cartList"></div>
+            <div class="mt-2"><strong>Subtotal:</strong> Rp <span id="subTotal">0</span></div>
+            <div class="mt-1"><strong>Diskon:</strong> Rp <span id="diskonRp">0</span></div>
+            <div class="mt-1"><strong>Biaya Admin (15% produk):</strong> Rp <span id="adminFee">0</span></div>
+            <div class="mt-1"><strong>Total Pembayaran:</strong> Rp <span id="totalBayar">0</span></div>
+
+          </div>
+          <div class="col-md-6">
+            <h6>Pembayaran</h6>
+            <div class="mb-2"><label class="form-label">Uang Muka (DP)</label><input class="form-control" id="downPayment" type="number" min="0" value="0"></div>
+            <div class="mb-2"><label class="form-label">Metode Pembayaran</label><select class="form-select" id="payMethod"><option value="cash">Cash</option><option value="tf">Transfer</option><option value="kredit">Kredit</option></select></div>
+            <div id="tfBlock" style="display:none" class="mb-2"><label class="form-label">Bukti Transfer (URL)</label><input class="form-control" id="tfProof"></div>
+            <div id="kreditBlock" style="display:none">
+              <label class="form-label">Tenor Kredit</label>
+              <select class="form-select mb-2" id="tenor"><option value="1">1 bulan</option><option value="3">3 bulan</option><option value="6">6 bulan</option><option value="9">9 bulan</option><option value="12">12 bulan</option></select>
+              <div class="small text-muted">Bunga kredit: 4.20% / bulan</div>
+            </div>
+            <div class="mt-3 text-end">
+              <button class="btn btn-primary" id="finishTrans">Simpan Transaksi</button>
+            </div>
           </div>
         </div>
+        <hr>
+        <h6>Daftar Transaksi</h6>
+        <div class="table-responsive"><table class="table table-sm table-striped" id="tableTrans"><thead><tr><th>ID</th><th>Pelanggan</th><th>Total</th><th>DP</th><th>Metode</th><th>Status</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
       </div>
+    </div>
 
-      <!-- REPORTS -->
-      <div class="tab-pane fade" id="reports">
+    <!-- REPORTS -->
+    <div class="tab-pane fade" id="tab-reports">
+      <div class="tab-card">
         <h5>Laporan</h5>
-        <div id="report-area"></div>
+        <div id="reportSummary"></div>
+        <hr>
+        <h6>Transaksi Lengkap</h6>
+        <div class="table-responsive"><table class="table table-sm table-striped" id="reportTrans"><thead><tr><th>ID</th><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th>Total</th><th>Metode</th><th>Status</th></tr></thead><tbody></tbody></table></div>
       </div>
-
     </div>
 
   </div>
-
-<script>
-// ------------------------ Data layer (localStorage helpers) ------------------------
-const DB_KEYS = {
-  users: 'sp_users',
-  suppliers: 'sp_suppliers',
-  categories: 'sp_categories',
-  items: 'sp_items',
-  products: 'sp_products',
-  transactions: 'sp_transactions',
-  payments: 'sp_payments'
-};
-
-function load(key){ return JSON.parse(localStorage.getItem(key) || '[]'); }
-function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-function uid(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*9000+1000); }
-
-// initialize default arrays if empty
-for(const k of Object.values(DB_KEYS)) if(!localStorage.getItem(k)) localStorage.setItem(k, '[]');
-
-// ------------------------ CRUD helpers ------------------------
-// USERS
-function getUsers(){ return load(DB_KEYS.users); }
-function addUser(u){ const arr=getUsers(); arr.push(u); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
-function updateUser(id, data){ let arr=getUsers(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
-function deleteUser(id){ let arr=getUsers(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
-
-// SUPPLIERS
-function getSuppliers(){ return load(DB_KEYS.suppliers); }
-function addSupplier(s){ const arr=getSuppliers(); arr.push(s); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
-function updateSupplier(id,data){ let arr=getSuppliers(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
-function deleteSupplier(id){ let arr=getSuppliers(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
-
-// CATEGORIES
-function getCategories(){ return load(DB_KEYS.categories); }
-function addCategory(c){ const arr=getCategories(); arr.push(c); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
-function updateCategory(id,data){ let arr=getCategories(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
-function deleteCategory(id){ let arr=getCategories(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
-
-// ITEMS
-function getItems(){ return load(DB_KEYS.items); }
-function addItem(i){ const arr=getItems(); arr.push(i); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
-function updateItem(id,data){ let arr=getItems(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
-function deleteItem(id){ let arr=getItems(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
-
-// PRODUCTS
-function getProducts(){ return load(DB_KEYS.products); }
-function addProduct(p){ const arr=getProducts(); arr.push(p); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
-function updateProduct(id,data){ let arr=getProducts(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
-function deleteProduct(id){ let arr=getProducts(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
-
-// TRANSACTIONS
-function getTransactions(){ return load(DB_KEYS.transactions); }
-function addTransaction(t){ const arr=getTransactions(); arr.push(t); save(DB_KEYS.transactions,arr); renderTransactionsList(); renderReport(); }
-
-// ------------------------ Render functions ------------------------
-function renderUsers(){ const arr=getUsers(); const cont=document.getElementById('users-list'); if(!cont) return; let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada user</div>';
-  arr.forEach(u=>{
-    html+=`<div class="card mb-2 p-2 d-flex align-items-center"><div class="d-flex w-100 align-items-center gap-3">
-      <img src="${u.photo||'https://via.placeholder.com/48'}" class="img-thumb">
-      <div class="flex-grow-1">
-        <strong>${u.name}</strong> <div class="small">NIK: ${u.nik || '-'} • HP: ${u.hp||'-'} </div>
-        <div class="small">Alamat: ${u.alamat||'-'}</div>
-      </div>
-      <div>
-        <button class="btn btn-sm btn-warning me-1" onclick="editUser('${u.id}')">Ubah</button>
-        <button class="btn btn-sm btn-danger" onclick="confirmDelete('user','${u.id}')">Hapus</button>
-      </div>
-    </div></div>`;
-  }); cont.innerHTML=html;
-}
-
-function renderSuppliers(){ const arr=getSuppliers(); const cont=document.getElementById('suppliers-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada supplier</div>';
-  arr.forEach(s=>{ html+=`<div class="card mb-2 p-2 d-flex justify-content-between"><div><strong>${s.name}</strong><div class="small">Perusahaan: ${s.company||'-'} • HP: ${s.hp||'-'}</div><div class="small">Keterangan: ${s.note||'-'}</div></div><div class="text-end"><button class="btn btn-sm btn-warning me-1" onclick="editSupplier('${s.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('supplier','${s.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
-
-function renderCategories(){ const arr=getCategories(); const cont=document.getElementById('categories-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada kategori</div>';
-  arr.forEach(c=>{ html+=`<div class="d-flex justify-content-between mb-2"><div>${c.name}</div><div><button class="btn btn-sm btn-warning me-1" onclick="editCategory('${c.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('category','${c.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
-
-function renderItems(){ const arr=getItems(); const cont=document.getElementById('items-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada item</div>';
-  arr.forEach(i=>{ html+=`<div class="d-flex justify-content-between mb-2"><div>${i.name}</div><div><button class="btn btn-sm btn-warning me-1" onclick="editItem('${i.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('item','${i.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
-
-function renderProducts(){ const arr=getProducts(); const cont=document.getElementById('products-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada produk</div>';
-  arr.forEach(p=>{ const sup = getSuppliers().find(s=>s.id===p.supplierId)?.name || '-'; const cat = getCategories().find(c=>c.id===p.categoryId)?.name || '-'; const itm = getItems().find(i=>i.id===p.itemId)?.name || '-'; html+=`<div class="card mb-2 p-2 d-flex justify-content-between"><div><strong>${p.name}</strong><div class="small">Supplier: ${sup} • Kategori: ${cat} • Item: ${itm}</div><div class="small">Stok: ${p.stock} • Harga: ${p.price}</div></div><div class="text-end"><button class="btn btn-sm btn-warning me-1" onclick="editProduct('${p.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('product','${p.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
-
-function renderProductSelect(){ const sel=document.getElementById('product-select'); if(!sel) return; const arr=getProducts(); sel.innerHTML=''; arr.forEach(p=>{ sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name} — Stok:${p.stock} — Rp ${numberFormat(p.price)}</option>`); }); }
-
-function renderMemberSelect(){ const sel=document.getElementById('member-select'); if(!sel) return; const arr=getUsers(); sel.innerHTML=''; sel.insertAdjacentHTML('beforeend','<option value="">-- Pilih member --</option>'); arr.forEach(u=> sel.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name} (ID:${u.id})</option>`)); }
-
-// Transactions list
-function renderTransactionsList(){ const arr=getTransactions(); const cont=document.getElementById('transactions-list'); if(!cont) return; if(arr.length===0) { cont.innerHTML='<div class="alert alert-secondary">Belum ada transaksi</div>'; return; }
-  let html=''; arr.slice().reverse().forEach(t=>{
-    html+=`<div class="card mb-2 p-2"><div class="d-flex justify-content-between"><div><strong>${t.id}</strong><div class="small">Pelanggan: ${t.customerName} • Tgl: ${new Date(t.createdAt).toLocaleString()}</div></div><div class="text-end"><div class="small">Total: Rp ${numberFormat(t.total)}</div><div class="small">Metode: ${t.paymentMethod} • Status: ${t.status || 'open'}</div></div></div>
-      <div class="mt-2"><button class="btn btn-sm btn-info me-1" onclick="viewTransaction('${t.id}')">Lihat</button></div></div>`;
-  }); cont.innerHTML=html; }
-
-// Reports
-function renderReport(){ const container=document.getElementById('report-area'); const tx = getTransactions(); const products = getProducts(); let totalSales = tx.reduce((s,x)=>s + (x.total||0),0); let totalTrans = tx.length; let stockZero = products.filter(p=>p.stock<=0).length; let html=`<div class="row">
-  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Penjualan Total</strong><div>Rp ${numberFormat(totalSales)}</div></div></div>
-  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Jumlah Transaksi</strong><div>${totalTrans}</div></div></div>
-  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Produk Habis</strong><div>${stockZero} produk</div></div></div>
 </div>
-<div class="mt-2"><h6>Rincian Transaksi</h6>`;
-  tx.slice().reverse().forEach(t=>{ html+=`<div class="card p-2 mb-1"><div class="d-flex justify-content-between"><div>${t.id} • ${t.customerName}</div><div>Rp ${numberFormat(t.total)}</div></div></div>`; }); html+='</div>'; container.innerHTML=html; }
 
-// ------------------------ Utilities ------------------------
-function numberFormat(n){ return (n||0).toLocaleString('id-ID'); }
-
-// ------------------------ Forms (modal-like via SweetAlert) ------------------------
-// USER FORM
-function openUserForm(editId){
-  if(editId){ const u=getUsers().find(x=>x.id===editId); userForm(u); }
-  else userForm();
-}
-function userForm(u){
-  const isEdit = !!u;
-  const html = `
-    <input id="uf-name" class="swal2-input" placeholder="Nama" value="${u?escapeHtml(u.name):''}">
-    <input id="uf-nik" class="swal2-input" placeholder="NIK" value="${u?escapeHtml(u.nik):''}">
-    <input id="uf-hp" class="swal2-input" placeholder="HP" value="${u?escapeHtml(u.hp):''}">
-    <input id="uf-alamat" class="swal2-input" placeholder="Alamat" value="${u?escapeHtml(u.alamat):''}">
-    <label class="form-label">Photo (opsional)</label>
-    <input id="uf-photo" type="file" accept="image/*" class="swal2-file">`;
-  Swal.fire({ title: isEdit? 'Edit User' : 'Tambah User', html, preConfirm: ()=>{
-    return new Promise((resolve)=>{
-      const name=document.getElementById('uf-name').value.trim();
-      const nik=document.getElementById('uf-nik').value.trim();
-      const hp=document.getElementById('uf-hp').value.trim();
-      const alamat=document.getElementById('uf-alamat').value.trim();
-      const fileElem=document.getElementById('uf-photo');
-      if(!name) { Swal.showValidationMessage('Nama wajib diisi'); return; }
-      if(fileElem && fileElem.files && fileElem.files[0]){
-        const fr=new FileReader(); fr.onload = ()=>{ resolve({name,nik,hp,alamat,photo:fr.result}); }; fr.readAsDataURL(fileElem.files[0]);
-      } else resolve({name,nik,hp,alamat,photo: u?u.photo:''});
-    });
-  }}).then(res=>{
-    if(res.isConfirmed){ const data=res.value; if(isEdit){ updateUser(u.id,data); Swal.fire('Berhasil','User diupdate','success'); } else { const newU={id:uid('USR'), name:data.name, nik:data.nik, hp:data.hp, alamat:data.alamat, photo:data.photo}; addUser(newU); Swal.fire('Berhasil','User ditambahkan','success'); }
-  }});
-}
-
-// SUPPLIER FORM
-function openSupplierForm(id){ if(id){ supplierForm(getSuppliers().find(x=>x.id===id)); } else supplierForm(); }
-function supplierForm(s){ const isEdit=!!s; Swal.fire({ title: isEdit? 'Edit Supplier':'Tambah Supplier', html: `<input id="sf-name" class="swal2-input" placeholder="Nama" value="${s?escapeHtml(s.name):''}"><input id="sf-company" class="swal2-input" placeholder="Nama Perusahaan" value="${s?escapeHtml(s.company):''}"><input id="sf-hp" class="swal2-input" placeholder="HP" value="${s?escapeHtml(s.hp):''}"><textarea id="sf-note" class="swal2-textarea" placeholder="Keterangan">${s?escapeHtml(s.note):''}</textarea>`, preConfirm: ()=>{ const name=document.getElementById('sf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name,company:document.getElementById('sf-company').value.trim(),hp:document.getElementById('sf-hp').value.trim(),note:document.getElementById('sf-note').value.trim()}; } }).then(res=>{ if(res.isConfirmed){ if(isEdit) updateSupplier(s.id,res.value); else addSupplier({id:uid('SUP'),...res.value}); Swal.fire('Sukses','Disimpan','success'); } }); }
-
-// CATEGORY FORM
-function openCategoryForm(){ Swal.fire({ title:'Tambah Kategori', html:`<input id="cf-name" class="swal2-input" placeholder="Nama kategori">`, preConfirm: ()=>{ const name=document.getElementById('cf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ addCategory({id:uid('CAT'), name:res.value.name}); Swal.fire('Sukses','Kategori ditambah','success'); } }); }
-function editCategory(id){ const c=getCategories().find(x=>x.id===id); Swal.fire({ title:'Edit Kategori', html:`<input id="cf-name" class="swal2-input" value="${escapeHtml(c.name)}">`, preConfirm: ()=>{ const name=document.getElementById('cf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ updateCategory(c.id,res.value); Swal.fire('Sukses','Diupdate','success'); } }); }
-
-// ITEM FORM
-function openItemForm(){ Swal.fire({ title:'Tambah Item', html:`<input id="it-name" class="swal2-input" placeholder="Nama item">`, preConfirm: ()=>{ const name=document.getElementById('it-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ addItem({id:uid('ITM'), name:res.value.name}); Swal.fire('Sukses','Item ditambah','success'); } }); }
-function editItem(id){ const it=getItems().find(x=>x.id===id); Swal.fire({ title:'Edit Item', html:`<input id="it-name" class="swal2-input" value="${escapeHtml(it.name)}">`, preConfirm: ()=>{ const name=document.getElementById('it-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ updateItem(it.id,res.value); Swal.fire('Sukses','Diupdate','success'); } }); }
-
-// PRODUCT FORM
-function openProductForm(editId){ if(editId){ productForm(getProducts().find(x=>x.id===editId)); } else productForm(); }
-function productForm(p){ const isEdit=!!p; const suppliers = getSuppliers(); const categories = getCategories(); const items = getItems(); let supOptions = suppliers.map(s=>`<option value="${s.id}" ${p && p.supplierId===s.id?'selected':''}>${s.name}</option>`).join(''); let catOptions = categories.map(c=>`<option value="${c.id}" ${p && p.categoryId===c.id?'selected':''}>${c.name}</option>`).join(''); let itemOptions = items.map(i=>`<option value="${i.id}" ${p && p.itemId===i.id?'selected':''}>${i.name}</option>`).join(''); Swal.fire({ title: isEdit? 'Edit Produk':'Tambah Produk', html: `<input id="pf-name" class="swal2-input" placeholder="Nama produk" value="${p?escapeHtml(p.name):''}"><div class="swal2-row"><select id="pf-sup" class="swal2-select">${supOptions}</select><select id="pf-cat" class="swal2-select">${catOptions}</select><select id="pf-item" class="swal2-select">${itemOptions}</select></div><input id="pf-stock" type="number" class="swal2-input" placeholder="Stok" value="${p?p.stock:0}"><input id="pf-price" type="number" class="swal2-input" placeholder="Harga" value="${p?p.price:0}">`, preConfirm: ()=>{ const name=document.getElementById('pf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name, supplierId:document.getElementById('pf-sup').value, categoryId:document.getElementById('pf-cat').value, itemId:document.getElementById('pf-item').value, stock:parseInt(document.getElementById('pf-stock').value||0,10), price:parseFloat(document.getElementById('pf-price').value||0)} }, didOpen: ()=>{
-    // if no suppliers/categories/items exist, show notice
-    if(suppliers.length===0 || categories.length===0 || items.length===0){ Swal.showValidationMessage('Pastikan sudah menambahkan supplier, kategori, dan item terlebih dahulu.'); }
-  } }).then(res=>{ if(res.isConfirmed){ if(isEdit) updateProduct(p.id,res.value); else addProduct({id:uid('PRD'),...res.value}); Swal.fire('Sukses','Produk tersimpan','success'); } }); }
-
-// ------------------------ Delete confirmation ------------------------
-function confirmDelete(type,id){ Swal.fire({ title:'Hapus?', text:'Data akan dihapus permanen.', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed){ if(type==='user') deleteUser(id); if(type==='supplier') deleteSupplier(id); if(type==='category') deleteCategory(id); if(type==='item') deleteItem(id); if(type==='product') deleteProduct(id); Swal.fire('Terhapus','','success'); } }); }
-
-// ------------------------ Transaction / Cart logic ------------------------
-let CART = [];
-function onCustomerTypeChange(){ const v=document.getElementById('trx-customer-type').value; document.getElementById('member-block').style.display = v==='member' ? 'block':'none'; document.getElementById('umum-block').style.display = v==='umum' ? 'block':'none'; }
-
-function addToCart(){ const pid=document.getElementById('product-select').value; const qty=parseInt(document.getElementById('product-qty').value||1,10); if(!pid){ Swal.fire('Pilih produk terlebih dahulu'); return; } const p = getProducts().find(x=>x.id===pid); if(!p) return; if(qty<=0) return; if(p.stock < qty){ Swal.fire('Stok tidak cukup'); return; }
-  const existing = CART.find(c=>c.productId===pid);
-  if(existing){ existing.qty += qty; } else CART.push({productId:pid, name:p.name, price:p.price, qty}); renderCart(); }
-
-function renderCart(){ const ct=document.getElementById('cart-list'); if(!ct) return; let html=''; if(CART.length===0) html='<div class="alert alert-secondary">Keranjang kosong</div>';
-  let subtotal = 0;
-  CART.forEach((c,idx)=>{ const p=getProducts().find(x=>x.id===c.productId); const line = (c.qty * c.price); subtotal += line; html+=`<div class="d-flex justify-content-between align-items-center mb-1"><div><strong>${c.name}</strong> <div class="small">Qty: <input type="number" value="${c.qty}" min="1" style="width:70px" onchange="updateCartQty(${idx},this.value)"></div></div><div>Rp ${numberFormat(line)} <button class="btn btn-sm btn-danger ms-2" onclick="removeCart(${idx})">Hapus</button></div></div>`; });
-  // discount controls
-  const discountEnabled = document.getElementById('discount-enable').checked;
-  document.getElementById('discount-controls').style.display = discountEnabled ? 'flex':'none';
-  let discountAmount = 0;
-  if(discountEnabled){ const type=document.getElementById('discount-type').value; const val=parseFloat(document.getElementById('discount-value').value||0);
-    if(type==='percent') discountAmount = subtotal * (val/100); else discountAmount = val;
-  }
-  const total = Math.max(0, subtotal - discountAmount);
-  document.getElementById('subtotal').innerText = 'Rp '+numberFormat(subtotal);
-  document.getElementById('discount-amount').innerText = 'Rp '+numberFormat(Math.round(discountAmount));
-  document.getElementById('grandtotal').innerText = 'Rp '+numberFormat(Math.round(total));
-  ct.innerHTML = html;
-}
-function updateCartQty(idx, val){ const q=parseInt(val||1,10); if(q<=0) return; const c=CART[idx]; const p=getProducts().find(x=>x.id===c.productId); if(p.stock < q){ Swal.fire('Stok tidak cukup'); return; } c.qty = q; renderCart(); }
-function removeCart(idx){ CART.splice(idx,1); renderCart(); }
-
-function checkout(){ if(CART.length===0){ Swal.fire('Keranjang kosong'); return; }
-  // prepare transaction
-  const custType=document.getElementById('trx-customer-type').value; let customerName='Umum'; let customerId=''; let customerData={};
-  if(custType==='member'){ const mid=document.getElementById('member-select').value; if(!mid){ Swal.fire('Pilih member'); return; } const u=getUsers().find(x=>x.id===mid); customerName=u.name; customerId=u.id; customerData={id:u.id,name:u.name,nik:u.nik,hp:u.hp,alamat:u.alamat}; }
-  else { const n=document.getElementById('umum-name').value.trim(); if(!n){ Swal.fire('Isi data pelanggan umum'); return; } customerName=n; customerData={name:n,hp:document.getElementById('umum-hp').value.trim(), alamat:document.getElementById('umum-alamat').value.trim()}; }
-  // calc totals same as renderCart
-  let subtotal = CART.reduce((s,c)=>s + c.qty*c.price,0);
-  let discountAmount = 0; if(document.getElementById('discount-enable').checked){ const type = document.getElementById('discount-type').value; const val = parseFloat(document.getElementById('discount-value').value||0); discountAmount = type==='percent'? subtotal*(val/100): val; }
-  const total = Math.max(0, Math.round(subtotal - discountAmount));
-  const paymentMethod = document.getElementById('payment-method').value;
-  const paidAmount = parseFloat(document.getElementById('paid-amount').value||0);
-  const status = (paymentMethod==='cash' && paidAmount>=total) || (paymentMethod==='tf' && paidAmount>=total) ? 'Lunas' : (paymentMethod==='kredit' ? 'Kredit' : (paidAmount>0 && paidAmount<total ? 'Partially Paid':'Belum Lunas'));
-
-  // reduce stock
-  const products = getProducts().map(p=>({...p}));
-  for(const c of CART){ const prod = products.find(x=>x.id===c.productId); if(!prod) continue; if(prod.stock < c.qty){ Swal.fire('Stok berubah, periksa kembali'); return; } prod.stock -= c.qty; }
-  save(DB_KEYS.products, products);
-
-  const trx = { id: uid('TRX'), createdAt: Date.now(), customerType: custType, customerId: customerId, customerName: customerName, customerData, items: JSON.parse(JSON.stringify(CART)), subtotal, discount: Math.round(discountAmount), total, paymentMethod, paidAmount, status };
-  addTransaction(trx);
-  // record payment minimal
-  const payments = load(DB_KEYS.payments||'sp_payments'); payments.push({id:uid('PAY'), trxId:trx.id, amount:paidAmount, method:paymentMethod, createdAt:Date.now()}); save(DB_KEYS.payments,payments);
-
-  Swal.fire('Sukses','Transaksi tersimpan (ID: '+trx.id+')','success');
-  // clear cart
-  CART = [];
-  renderCart(); renderProducts(); renderTransactionsList(); renderReport(); }
-
-function viewTransaction(id){ const t = getTransactions().find(x=>x.id===id); if(!t) return; let html=`<strong>ID: ${t.id}</strong><div>${new Date(t.createdAt).toLocaleString()}</div><div>Pelanggan: ${t.customerName}</div><hr><div>`; t.items.forEach(i=> html+=`<div>${i.name} • ${i.qty} x Rp ${numberFormat(i.price)} = Rp ${numberFormat(i.qty*i.price)}</div>`); html+=`</div><hr><div>Total: Rp ${numberFormat(t.total)}</div><div>Status: ${t.status}</div>`; Swal.fire({title:'Detail Transaksi', html}); }
-
-// ------------------------ Helpers ------------------------
-function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
-
-// initial rendering
-renderUsers(); renderSuppliers(); renderCategories(); renderItems(); renderProducts(); renderProductSelect(); renderMemberSelect(); renderTransactionsList(); renderReport();
-
-// bind discount toggle
-document.getElementById('discount-enable').addEventListener('change',()=>renderCart());
-
-</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// --- Enhanced Transaksi Validation, Pagination, Filter, Payment Logic ---
+// ======= STORAGE KEYS & INIT =======
+const KEY = {
+  users:'sp_users', suppliers:'sp_suppliers', cats:'sp_cats', items:'sp_items', prods:'sp_prods', trans:'sp_trans', credits:'sp_credits'
+}
+function load(key){return JSON.parse(localStorage.getItem(key) || '[]')}
+function save(key,arr){localStorage.setItem(key, JSON.stringify(arr))}
 
-// Validasi ketat transaksiunction validateTransactionForm() {
-  const pelanggan = document.getElementById('transNama').value.trim();
-  const items = transaksiCart;
-  if (!pelanggan) return alert('Nama pelanggan wajib diisi!');
-  if (items.length === 0) return alert('Keranjang masih kosong!');
-  return true;
+// initial arrays
+let users = load(KEY.users)
+let suppliers = load(KEY.suppliers)
+let cats = load(KEY.cats)
+let items = load(KEY.items)
+let prods = load(KEY.prods)
+let trans = load(KEY.trans)
+let credits = load(KEY.credits)
+
+// ======= HELPERS =======
+function formatRupiah(v){v = Number(v)||0; return v.toLocaleString('id-ID')}
+function findIndexById(arr,id){return arr.findIndex(x=>x.id==id)}
+
+// ======= USERS CRUD =======
+const formUser = document.getElementById('formUser')
+function renderUsers(){
+  const tbody = document.querySelector('#tableUsers tbody'); tbody.innerHTML=''
+  users.forEach((u,i)=>{
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td><img src="${u.photo||'https://via.placeholder.com/40'}" class="small-img"></td><td>${u.id}</td><td>${u.name}</td><td>${u.nik||''}</td><td>${u.hp||''}</td><td>${u.alamat||''}</td><td><button class='btn btn-sm btn-warning me-1' onclick="editUser(${i})">Edit</button><button class='btn btn-sm btn-danger' onclick="deleteUser(${i})">Hapus</button></td>`
+    tbody.appendChild(tr)
+  })
+}
+formUser.addEventListener('submit',e=>{
+  e.preventDefault();
+  const i = document.getElementById('userIndex').value
+  const data = {id:document.getElementById('userId').value.trim(), name:document.getElementById('userName').value.trim(), nik:document.getElementById('userNIK').value.trim(), hp:document.getElementById('userHP').value.trim(), alamat:document.getElementById('userAlamat').value.trim(), photo:document.getElementById('userPhoto').value.trim()}
+  if(!data.id||!data.name){alert('ID dan Nama wajib');return}
+  if(i===''){ if(findIndexById(users,data.id)!==-1){alert('ID user sudah ada'); return} users.push(data) } else { users[i]=data }
+  save(KEY.users,users); renderUsers(); resetUserForm(); populateMemberSelect();
+})
+function editUser(i){ const u=users[i]; document.getElementById('userIndex').value=i; document.getElementById('userId').value=u.id; document.getElementById('userName').value=u.name; document.getElementById('userNIK').value=u.nik; document.getElementById('userHP').value=u.hp; document.getElementById('userPhoto').value=u.photo; document.getElementById('userAlamat').value=u.alamat }
+function deleteUser(i){ if(confirm('Hapus user?')){ users.splice(i,1); save(KEY.users,users); renderUsers(); populateMemberSelect() }}
+document.getElementById('resetUser').addEventListener('click',resetUserForm)
+function resetUserForm(){ document.getElementById('userIndex').value=''; formUser.reset() }
+
+// ======= SUPPLIERS CRUD =======
+const formSupplier = document.getElementById('formSupplier')
+function renderSuppliers(){ const tbody = document.querySelector('#tableSuppliers tbody'); tbody.innerHTML=''; suppliers.forEach((s,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${s.id}</td><td>${s.name}</td><td>${s.hp||''}</td><td>${s.ket||''}</td><td><button class='btn btn-sm btn-warning me-1' onclick="editSupplier(${i})">Edit</button><button class='btn btn-sm btn-danger' onclick="deleteSupplier(${i})">Hapus</button></td>`; tbody.appendChild(tr) }) }
+formSupplier.addEventListener('submit',e=>{ e.preventDefault(); const i=document.getElementById('supplierIndex').value; const data={id:document.getElementById('supplierId').value.trim(), name:document.getElementById('supplierName').value.trim(), hp:document.getElementById('supplierHP').value.trim(), ket:document.getElementById('supplierKeterangan').value.trim()}; if(!data.id||!data.name){alert('ID & Nama Perusahaan wajib'); return} if(i===''){ if(findIndexById(suppliers,data.id)!==-1){alert('ID supplier sudah ada'); return} suppliers.push(data) } else suppliers[i]=data; save(KEY.suppliers,suppliers); renderSuppliers(); resetSupplierForm(); populateProductSelects(); })
+function editSupplier(i){ const s=suppliers[i]; document.getElementById('supplierIndex').value=i; document.getElementById('supplierId').value=s.id; document.getElementById('supplierName').value=s.name; document.getElementById('supplierHP').value=s.hp; document.getElementById('supplierKeterangan').value=s.ket }
+function deleteSupplier(i){ if(confirm('Hapus supplier?')){ suppliers.splice(i,1); save(KEY.suppliers,suppliers); renderSuppliers(); populateProductSelects() }}
+document.getElementById('resetSupplier').addEventListener('click',resetSupplierForm)
+function resetSupplierForm(){ document.getElementById('supplierIndex').value=''; formSupplier.reset() }
+
+// ======= CATEGORIES CRUD =======
+const formCat=document.getElementById('formCat')
+function renderCats(){ const tbody=document.querySelector('#tableCats tbody'); tbody.innerHTML=''; cats.forEach((c,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${c.id}</td><td>${c.name}</td><td><button class='btn btn-sm btn-warning me-1' onclick="editCat(${i})">Edit</button><button class='btn btn-sm btn-danger' onclick="deleteCat(${i})">Hapus</button></td>`; tbody.appendChild(tr) }) }
+formCat.addEventListener('submit',e=>{ e.preventDefault(); const i=document.getElementById('catIndex').value; const data={id:document.getElementById('catId').value.trim(), name:document.getElementById('catName').value.trim()}; if(!data.id||!data.name){alert('ID & Nama wajib');return} if(i===''){ if(findIndexById(cats,data.id)!==-1){alert('ID kategori sudah ada'); return} cats.push(data)} else cats[i]=data; save(KEY.cats,cats); renderCats(); resetCatForm(); populateProductSelects() })
+function editCat(i){ const c=cats[i]; document.getElementById('catIndex').value=i; document.getElementById('catId').value=c.id; document.getElementById('catName').value=c.name }
+function deleteCat(i){ if(confirm('Hapus kategori?')){ cats.splice(i,1); save(KEY.cats,cats); renderCats(); populateProductSelects() }}
+document.getElementById('resetCat').addEventListener('click',resetCatForm)
+function resetCatForm(){ document.getElementById('catIndex').value=''; formCat.reset() }
+
+// ======= ITEMS CRUD =======
+const formItem=document.getElementById('formItem')
+function renderItems(){ const tbody=document.querySelector('#tableItems tbody'); tbody.innerHTML=''; items.forEach((it,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${it.id}</td><td>${it.name}</td><td><button class='btn btn-sm btn-warning me-1' onclick="editItem(${i})">Edit</button><button class='btn btn-sm btn-danger' onclick="deleteItem(${i})">Hapus</button></td>`; tbody.appendChild(tr) }) }
+formItem.addEventListener('submit',e=>{ e.preventDefault(); const i=document.getElementById('itemIndex').value; const data={id:document.getElementById('itemId').value.trim(), name:document.getElementById('itemName').value.trim()}; if(!data.id||!data.name){alert('ID & Nama wajib');return} if(i===''){ if(findIndexById(items,data.id)!==-1){alert('ID item sudah ada');return} items.push(data)} else items[i]=data; save(KEY.items,items); renderItems(); resetItemForm(); populateProductSelects() })
+function editItem(i){ const it=items[i]; document.getElementById('itemIndex').value=i; document.getElementById('itemId').value=it.id; document.getElementById('itemName').value=it.name }
+function deleteItem(i){ if(confirm('Hapus item?')){ items.splice(i,1); save(KEY.items,items); renderItems(); populateProductSelects() }}
+document.getElementById('resetItem').addEventListener('click',resetItemForm)
+function resetItemForm(){ document.getElementById('itemIndex').value=''; formItem.reset() }
+
+// ======= PRODUCTS CRUD =======
+const formProd=document.getElementById('formProduct')
+function renderProducts(){ const tbody=document.querySelector('#tableProducts tbody'); tbody.innerHTML=''; prods.forEach((p,i)=>{ const sup = suppliers.find(s=>s.id==p.supplier)?.name || '-'; const cat = cats.find(c=>c.id==p.cat)?.name||'-'; const it = items.find(x=>x.id==p.item)?.name||'-'; const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.id}</td><td>${p.name}</td><td>${sup}</td><td>${cat}</td><td>${it}</td><td>${p.stock}</td><td>${formatRupiah(p.price)}</td><td><button class='btn btn-sm btn-warning me-1' onclick="editProd(${i})">Edit</button><button class='btn btn-sm btn-danger' onclick="deleteProd(${i})">Hapus</button></td>`; tbody.appendChild(tr) }) }
+function populateProductSelects(){ const selProd = document.getElementById('selectProduct'); selProd.innerHTML='<option value="">--Pilih Produk--</option>'; prods.forEach(p=>{ selProd.insertAdjacentHTML('beforeend',`<option value="${p.id}">${p.name} (Stok: ${p.stock}) - Rp ${formatRupiah(p.price)}</option>`) })
+ // product form selects
+ const supSel=document.getElementById('prodSupplier'); supSel.innerHTML=''; suppliers.forEach(s=> supSel.insertAdjacentHTML('beforeend',`<option value="${s.id}">${s.name}</option>`))
+ const catSel=document.getElementById('prodCat'); catSel.innerHTML=''; cats.forEach(c=> catSel.insertAdjacentHTML('beforeend',`<option value="${c.id}">${c.name}</option>`))
+ const itemSel=document.getElementById('prodItem'); itemSel.innerHTML=''; items.forEach(it=> itemSel.insertAdjacentHTML('beforeend',`<option value="${it.id}">${it.name}</option>`))
+}
+formProd.addEventListener('submit',e=>{ e.preventDefault(); const i=document.getElementById('prodIndex').value; const data={id:document.getElementById('prodId').value.trim(), name:document.getElementById('prodName').value.trim(), supplier:document.getElementById('prodSupplier').value, cat:document.getElementById('prodCat').value, item:document.getElementById('prodItem').value, stock: Number(document.getElementById('prodStock').value)||0, price: Number(document.getElementById('prodPrice').value)||0}; if(!data.id||!data.name){alert('ID & Nama Produk wajib');return} if(i===''){ if(findIndexById(prods,data.id)!==-1){alert('ID produk sudah ada');return} prods.push(data)} else prods[i]=data; save(KEY.prods,prods); renderProducts(); resetProdForm(); populateProductSelects() })
+function editProd(i){ const p=prods[i]; document.getElementById('prodIndex').value=i; document.getElementById('prodId').value=p.id; document.getElementById('prodName').value=p.name; document.getElementById('prodSupplier').value=p.supplier; document.getElementById('prodCat').value=p.cat; document.getElementById('prodItem').value=p.item; document.getElementById('prodStock').value=p.stock; document.getElementById('prodPrice').value=p.price }
+function deleteProd(i){ if(confirm('Hapus produk?')){ prods.splice(i,1); save(KEY.prods,prods); renderProducts(); populateProductSelects() }}
+document.getElementById('resetProd').addEventListener('click',resetProdForm)
+function resetProdForm(){ document.getElementById('prodIndex').value=''; formProd.reset(); document.getElementById('prodStock').value=0; document.getElementById('prodPrice').value=0 }
+
+// ======= TRANSACTIONS & CART =======
+let cart = [] // {prodId, name, price, qty}
+const transType = document.getElementById('transType'); const memberBlock=document.getElementById('memberBlock'); const umumBlock=document.getElementById('umumBlock');
+transType.addEventListener('change',()=>{ if(transType.value==='member'){ memberBlock.style.display='block'; umumBlock.style.display='none' } else { memberBlock.style.display='none'; umumBlock.style.display='block' } })
+function populateMemberSelect(){ const sel=document.getElementById('selectMember'); sel.innerHTML='<option value="">--Pilih--</option>'; users.forEach(u=> sel.insertAdjacentHTML('beforeend',`<option value="${u.id}">${u.name} [${u.id}]</option>`)) }
+function populateProductSelect(){ const sel=document.getElementById('selectProduct'); sel.innerHTML='<option value="">--Pilih Produk--</option>'; prods.forEach(p=> sel.insertAdjacentHTML('beforeend',`<option value="${p.id}">${p.name} (Stok ${p.stock}) - Rp ${formatRupiah(p.price)}</option>`)) }
+
+document.getElementById('addToCart').addEventListener('click',()=>{
+  const pid = document.getElementById('selectProduct').value; const qty = Number(document.getElementById('cartQty').value)||1; if(!pid){alert('Pilih produk dulu'); return}
+  const p = prods.find(x=>x.id==pid); if(!p){alert('Produk tidak ditemukan');return}
+  if(qty>p.stock){alert('Jumlah melebihi stok'); return}
+  const exists = cart.find(c=>c.prodId==pid)
+  if(exists) exists.qty += qty; else cart.push({prodId:pid, name:p.name, price:p.price, qty})
+  renderCart();
+})
+
+document.getElementById('discountToggle').addEventListener('change',(e)=>{ document.getElementById('discountBox').style.display = e.target.checked? 'block':'none' })
+document.getElementById('payMethod').addEventListener('change',(e)=>{ const v=e.target.value; document.getElementById('tfBlock').style.display = v==='tf'? 'block':'none'; document.getElementById('kreditBlock').style.display = v==='kredit'? 'block':'none' })
+
+function renderCart(){ const el=document.getElementById('cartList'); el.innerHTML=''; let subtotal=0; cart.forEach((c,i)=>{ const p = prods.find(x=>x.id==c.prodId); const row = document.createElement('div'); row.className='d-flex justify-content-between border p-2 mb-1 align-items-center'; row.innerHTML=`<div><strong>${c.name}</strong> <div class='small text-muted'>Rp ${formatRupiah(c.price)} x ${c.qty}</div></div><div><button class='btn btn-sm btn-danger me-1' onclick="removeCart(${i})">-</button><button class='btn btn-sm btn-secondary me-1' onclick="decCart(${i})">—</button><button class='btn btn-sm btn-success' onclick="incCart(${i})">+</button></div>`; el.appendChild(row); subtotal += c.price * c.qty })
+  document.getElementById('subTotal').textContent = formatRupiah(subtotal)
+  // calculate discount
+  let diskRp = 0; if(document.getElementById('discountToggle').checked){ const t=document.getElementById('discountType').value; const v=Number(document.getElementById('discountValue').value)||0; if(t==='percent') diskRp = Math.round(subtotal * (v/100)); else diskRp = v }
+  document.getElementById('diskonRp').textContent = formatRupiah(diskRp)
+  const adminFee = Math.round(subtotal * 0.15)
+  document.getElementById('adminFee').textContent = formatRupiah(adminFee)
+  const total = Math.max(0, subtotal - diskRp + adminFee)
+  document.getElementById('totalBayar').textContent = formatRupiah(total)
 }
 
-// Pagination & Filter daftar transaksi
-let transaksiPage = 1;
-let transaksiPerPage = 10;
-let transaksiFilter = '';
+function removeCart(i){ cart.splice(i,1); renderCart() }
+function decCart(i){ if(cart[i].qty>1) cart[i].qty--; else cart.splice(i,1); renderCart() }
+function incCart(i){ const p = prods.find(x=>x.id==cart[i].prodId); if(cart[i].qty < p.stock) cart[i].qty++; else alert('Maks stok'); renderCart() }
 
-function renderTransaksiList() {
-  let data = JSON.parse(localStorage.getItem('transaksi') || '[]');
-  if (transaksiFilter.trim() !== '') {
-    data = data.filter(t => t.nama.toLowerCase().includes(transaksiFilter.toLowerCase()));
-  }
-  const start = (transaksiPage - 1) * transaksiPerPage;
-  const paginated = data.slice(start, start + transaksiPerPage);
-  document.getElementById('transaksiList').innerHTML = paginated
-    .map(t => `<tr><td>${t.id}</td><td>${t.nama}</td><td>${t.total}</td><td>${t.metode}</td></tr>`)
-    .join('');
-}
+// payment finish
+document.getElementById('finishTrans').addEventListener('click',()=>{
+  if(cart.length===0){alert('Keranjang kosong'); return}
+  const tipe = transType.value; let pelanggan = '';
+  if(tipe==='member'){ const mid = document.getElementById('selectMember').value; if(!mid){alert('Pilih member'); return} pelanggan = users.find(u=>u.id==mid)?.name || mid }
+  else { const name = document.getElementById('umumName').value.trim(); if(!name){alert('Isi nama pelanggan umum'); return} pelanggan = name }
+  // totals
+  let subtotal = cart.reduce((s,c)=> s + c.price*c.qty,0)
+  let diskRp = 0; if(document.getElementById('discountToggle').checked){ const t=document.getElementById('discountType').value; const v=Number(document.getElementById('discountValue').value)||0; if(t==='percent') diskRp = Math.round(subtotal*(v/100)); else diskRp = v }
+  const adminFee = Math.round(subtotal * 0.15)
+  const total = Math.max(0, subtotal - diskRp + adminFee)
+  const dp = Number(document.getElementById('downPayment').value)||0
+  const method = document.getElementById('payMethod').value
+  if(dp > total){ alert('DP tidak boleh lebih besar dari total'); return }
 
-// --- PAYMENT LOGIC ---
-function handlePaymentMethod() {
-  const metode = document.getElementById('metodePembayaran').value;
-  const total = parseFloat(document.getElementById('totalTransaksi').innerText) || 0;
-
-  document.getElementById('cashInput').style.display = metode === 'cash' ? 'block' : 'none';
-  document.getElementById('transferInput').style.display = metode === 'transfer' ? 'block' : 'none';
-  document.getElementById('kreditInput').style.display = metode === 'kredit' ? 'block' : 'none';
-
-  // Kredit: hitung bunga + admin
-  if (metode === 'kredit') {
-    const bunga = total * 0.035;
-    const admin = total * 0.15;
-    const totalKredit = total + bunga + admin;
-    document.getElementById('totalKredit').innerText = totalKredit.toFixed(2);
-  }
-}
-unction prosesPembayaran() {
-  const metode = document.getElementById('metodePembayaran').value;
-  const total = parseFloat(document.getElementById('totalTransaksi').innerText);
-
-  if (metode === 'cash') {
-    const bayar = parseFloat(document.getElementById('cashBayar').value);
-    if (bayar < total) {
-      alert('Pembayaran kurang! Dialihkan ke kredit.');
-      document.getElementById('metodePembayaran').value = 'kredit';
-      handlePaymentMethod();
-      return;
+  // handle methods
+  let status = 'Belum Lunas'
+  if(method==='cash'){
+    if(dp >= total){ status='Lunas' }
+    else { // kurang -> alihkan ke kredit automatically
+      if(!confirm('Pembayaran cash kurang, ingin konversi ke kredit otomatis? Tekan OK untuk lanjut (akan buat entry kredit).')) return
+      createCreditFlow(pelanggan, cart, subtotal, diskRp, adminFee, total, dp)
+      return
     }
+  } else if(method==='tf'){
+    // require proof
+    const proof = document.getElementById('tfProof').value.trim(); if(!proof){ if(!confirm('Anda tidak mengisi bukti transfer. Tetap simpan sebagai Pending?')) return }
+    status = dp >= total ? 'Lunas' : 'Pending'
+  } else if(method==='kredit'){
+    // create kredit entry
+    createCreditFlow(pelanggan, cart, subtotal, diskRp, adminFee, total, dp)
+    return
   }
 
-  if (metode === 'transfer') {
-    const bukti = document.getElementById('transferBukti').value;
-    if (!bukti) return alert('Upload bukti transfer wajib!');
-  }
+  // save transaction
+  const id = 'TR' + Date.now()
+  const t = {id, date: new Date().toISOString(), customer:pelanggan, items: cart, subtotal, diskRp, adminFee, total, dp, method, status}
+  trans.push(t); save(KEY.trans, trans)
+  // reduce stock
+  cart.forEach(c=>{ const p = prods.find(x=>x.id==c.prodId); if(p) p.stock = Math.max(0, p.stock - c.qty) }); save(KEY.prods, prods)
+  // reset
+  cart=[]; renderCart(); renderProducts(); renderTrans(); populateProductSelect(); alert('Transaksi tersimpan')
+})
 
-  if (metode === 'kredit') {
-    alert('Transaksi dimasukkan ke daftar cicilan kredit.');
-  }
-
-  alert('Transaksi berhasil!');
+function createCreditFlow(pelanggan, cartData, subtotal, diskRp, adminFee, total, dp){
+  const tenor = Number(document.getElementById('tenor').value)||1
+  const bungaPerbulan = 4.2/100
+  const principal = total - dp
+  const admin = adminFee
+  // monthly payment simple interest on remaining per month (annuity not required) -> use annuity formula for monthly
+  const r = bungaPerbulan
+  const n = tenor
+  // monthly payment using annuity formula
+  const monthly = Math.round((principal * r) / (1 - Math.pow(1+r, -n)))
+  const schedule = []
+  for(let i=1;i<=n;i++){ schedule.push({month:i, amount:monthly, paid:0}) }
+  const id = 'TR' + Date.now()
+  const credit = {id, date:new Date().toISOString(), customer:pelanggan, items:cartData, subtotal, diskRp, adminFee, total, dp, principal, tenor, monthly, schedule, status:'Kredit'}
+  credits.push(credit); save(KEY.credits, credits)
+  // also save as transaction with status Kredit
+  const t = {id, date:new Date().toISOString(), customer:pelanggan, items: cartData, subtotal, diskRp, adminFee, total, dp, method:'Kredit', status:'Kredit'}
+  trans.push(t); save(KEY.trans, trans)
+  // reduce stock
+  cartData.forEach(c=>{ const p=prods.find(x=>x.id==c.prodId); if(p) p.stock = Math.max(0,p.stock - c.qty) }); save(KEY.prods, prods)
+  cart=[]; renderCart(); renderProducts(); renderTrans(); populateProductSelect(); alert('Entry kredit tersimpan. Tenor: '+tenor+' bulan, angsuran per bulan: Rp '+formatRupiah(monthly))
 }
+
+function renderTrans(){ const tbody=document.querySelector('#tableTrans tbody'); tbody.innerHTML=''; trans.forEach((t,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${t.id}</td><td>${t.customer}</td><td>Rp ${formatRupiah(t.total)}</td><td>Rp ${formatRupiah(t.dp)}</td><td>${t.method}</td><td>${t.status}</td><td><button class='btn btn-sm btn-info' onclick="viewTrans(${i})">Lihat</button></td>`; tbody.appendChild(tr) }) }
+function viewTrans(i){ const t=trans[i]; alert('Detail Transaksi:\nID: '+t.id+'\nPelanggan: '+t.customer+'\nTotal: Rp '+formatRupiah(t.total)+'\nStatus: '+t.status) }
+
+// ======= REPORTS =======
+function renderReports(){ const sumTotal = trans.reduce((s,t)=> s + (t.total||0),0); const totalCount = trans.length; const pending = trans.filter(t=> t.status==='Pending' || t.status==='Belum Lunas').length; const kred = credits.length
+  const el=document.getElementById('reportSummary'); el.innerHTML=`<div class="row"><div class="col-md-3"><div class="p-3 bg-white rounded">Total Transaksi: <strong>${totalCount}</strong></div></div><div class="col-md-3"><div class="p-3 bg-white rounded">Total Omzet: <strong>Rp ${formatRupiah(sumTotal)}</strong></div></div><div class="col-md-3"><div class="p-3 bg-white rounded">Pending/Belum Lunas: <strong>${pending}</strong></div></div><div class="col-md-3"><div class="p-3 bg-white rounded">Credit Accounts: <strong>${kred}</strong></div></div></div>`
+  const tbody = document.querySelector('#reportTrans tbody'); tbody.innerHTML=''; trans.forEach(t=>{ const prodNames = t.items.map(i=> i.name + ' x'+i.qty).join(', '); const tr=document.createElement('tr'); tr.innerHTML=`<td>${t.id}</td><td>${new Date(t.date).toLocaleString()}</td><td>${t.customer}</td><td>${prodNames}</td><td>Rp ${formatRupiah(t.total)}</td><td>${t.method}</td><td>${t.status}</td>`; tbody.appendChild(tr) }) }
+
+// ======= BOOTSTRAP ON LOAD =======
+function init(){ renderUsers(); renderSuppliers(); renderCats(); renderItems(); renderProducts(); populateProductSelects(); populateMemberSelect(); renderTrans(); renderReports() }
+init()
+
+// Expose some functions for inline handlers
+window.editUser = editUser; window.deleteUser = deleteUser; window.editSupplier = editSupplier; window.deleteSupplier = deleteSupplier; window.editCat = editCat; window.deleteCat = deleteCat; window.editItem = editItem; window.deleteItem = deleteItem; window.editProd = editProd; window.deleteProd = deleteProd; window.removeCart = removeCart; window.decCart = decCart; window.incCart = incCart; window.viewTrans = viewTrans;
+
 </script>
 </body>
 </html>
