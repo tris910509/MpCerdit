@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistem Pelayanan Penjualan (Single File)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { padding: 1.5rem; }
+    .pointer { cursor: pointer; }
+    .img-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px }
+    .small-muted { font-size:0.85rem; color:#666 }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <h2 class="mb-3">Sistem Pelayanan Penjualan (HTML + JavaScript, localStorage)</h2>
+    <p class="small-muted">Fitur: Users, Supplier, Kategori, Item, Produk, Transaksi (Member / Umum), Pembayaran & Laporan. Semua data tersimpan di <code>localStorage</code>. CRUD tersedia.</p>
+
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">Users</button></li>
+      <li class="nav-item"><button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button">Suppliers</button></li>
+      <li class="nav-item"><button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">Kategori</button></li>
+      <li class="nav-item"><button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button">Item</button></li>
+      <li class="nav-item"><button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button">Produk</button></li>
+      <li class="nav-item"><button class="nav-link" id="trans-tab" data-bs-toggle="tab" data-bs-target="#trans" type="button">Transaksi</button></li>
+      <li class="nav-item"><button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button">Laporan</button></li>
+    </ul>
+
+    <div class="tab-content mt-3">
+      <!-- USERS -->
+      <div class="tab-pane fade show active" id="users">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Manajemen Users</h5>
+          <button class="btn btn-primary" onclick="openUserForm()">Tambah User</button>
+        </div>
+        <div id="users-list"></div>
+      </div>
+
+      <!-- SUPPLIERS -->
+      <div class="tab-pane fade" id="suppliers">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Manajemen Supplier</h5>
+          <button class="btn btn-primary" onclick="openSupplierForm()">Tambah Supplier</button>
+        </div>
+        <div id="suppliers-list"></div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="tab-pane fade" id="categories">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Manajemen Kategori</h5>
+          <button class="btn btn-primary" onclick="openCategoryForm()">Tambah Kategori</button>
+        </div>
+        <div id="categories-list"></div>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="tab-pane fade" id="items">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Manajemen Item</h5>
+          <button class="btn btn-primary" onclick="openItemForm()">Tambah Item</button>
+        </div>
+        <div id="items-list"></div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="tab-pane fade" id="products">
+        <div class="d-flex justify-content-between mb-2">
+          <h5>Manajemen Produk</h5>
+          <button class="btn btn-primary" onclick="openProductForm()">Tambah Produk</button>
+        </div>
+        <div id="products-list"></div>
+      </div>
+
+      <!-- TRANSAKSI -->
+      <div class="tab-pane fade" id="trans">
+        <div class="row">
+          <div class="col-lg-7">
+            <h5>Buat Transaksi</h5>
+            <div class="card mb-3 p-3">
+              <div class="mb-2">
+                <label class="form-label">Tipe Pelanggan</label>
+                <select id="trx-customer-type" class="form-select" onchange="onCustomerTypeChange()">
+                  <option value="member">Member</option>
+                  <option value="umum">Umum</option>
+                </select>
+              </div>
+
+              <div id="member-block" class="mb-2">
+                <label class="form-label">Pilih Member</label>
+                <select id="member-select" class="form-select"></select>
+              </div>
+
+              <div id="umum-block" class="mb-3" style="display:none">
+                <label class="form-label">Data Pelanggan (Umum)</label>
+                <input id="umum-name" class="form-control mb-1" placeholder="Nama">
+                <input id="umum-hp" class="form-control mb-1" placeholder="No HP">
+                <input id="umum-alamat" class="form-control" placeholder="Alamat">
+              </div>
+
+              <hr>
+
+              <div class="mb-2 d-flex gap-2">
+                <select id="product-select" class="form-select"></select>
+                <input id="product-qty" type="number" min="1" value="1" class="form-control" style="max-width:120px">
+                <button class="btn btn-success" onclick="addToCart()">Tambah</button>
+              </div>
+
+              <div id="cart-list"></div>
+
+              <div class="mt-2">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="discount-enable" onchange="renderCart()">
+                  <label class="form-check-label">Gunakan Diskon</label>
+                </div>
+                <div id="discount-controls" style="display:none" class="mt-2 d-flex gap-2 align-items-center">
+                  <select id="discount-type" class="form-select" style="max-width:140px">
+                    <option value="percent">% (Persen)</option>
+                    <option value="amount">Rp (Nominal)</option>
+                  </select>
+                  <input id="discount-value" type="number" class="form-control" placeholder="Nilai diskon" style="max-width:180px" oninput="renderCart()">
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <div class="d-flex justify-content-between"><strong>Subtotal:</strong><span id="subtotal">0</span></div>
+                <div class="d-flex justify-content-between"><strong>Diskon:</strong><span id="discount-amount">0</span></div>
+                <div class="d-flex justify-content-between"><strong>Total:</strong><span id="grandtotal">0</span></div>
+              </div>
+
+              <hr>
+              <div class="mb-2">
+                <label class="form-label">Metode Pembayaran</label>
+                <select id="payment-method" class="form-select">
+                  <option value="cash">Cash</option>
+                  <option value="tf">Transfer</option>
+                  <option value="kredit">Kredit</option>
+                </select>
+              </div>
+              <div class="d-flex gap-2">
+                <input id="paid-amount" type="number" class="form-control" placeholder="Jumlah dibayar (opsional)">
+                <button class="btn btn-primary" onclick="checkout()">Checkout</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <h5>Daftar Transaksi</h5>
+            <div id="transactions-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="tab-pane fade" id="reports">
+        <h5>Laporan</h5>
+        <div id="report-area"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+// ------------------------ Data layer (localStorage helpers) ------------------------
+const DB_KEYS = {
+  users: 'sp_users',
+  suppliers: 'sp_suppliers',
+  categories: 'sp_categories',
+  items: 'sp_items',
+  products: 'sp_products',
+  transactions: 'sp_transactions',
+  payments: 'sp_payments'
+};
+
+function load(key){ return JSON.parse(localStorage.getItem(key) || '[]'); }
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+function uid(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*9000+1000); }
+
+// initialize default arrays if empty
+for(const k of Object.values(DB_KEYS)) if(!localStorage.getItem(k)) localStorage.setItem(k, '[]');
+
+// ------------------------ CRUD helpers ------------------------
+// USERS
+function getUsers(){ return load(DB_KEYS.users); }
+function addUser(u){ const arr=getUsers(); arr.push(u); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
+function updateUser(id, data){ let arr=getUsers(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
+function deleteUser(id){ let arr=getUsers(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.users,arr); renderUsers(); renderMemberSelect(); }
+
+// SUPPLIERS
+function getSuppliers(){ return load(DB_KEYS.suppliers); }
+function addSupplier(s){ const arr=getSuppliers(); arr.push(s); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
+function updateSupplier(id,data){ let arr=getSuppliers(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
+function deleteSupplier(id){ let arr=getSuppliers(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.suppliers,arr); renderSuppliers(); renderProductSupplierOptions(); }
+
+// CATEGORIES
+function getCategories(){ return load(DB_KEYS.categories); }
+function addCategory(c){ const arr=getCategories(); arr.push(c); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
+function updateCategory(id,data){ let arr=getCategories(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
+function deleteCategory(id){ let arr=getCategories(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.categories,arr); renderCategories(); renderProductCategoryOptions(); }
+
+// ITEMS
+function getItems(){ return load(DB_KEYS.items); }
+function addItem(i){ const arr=getItems(); arr.push(i); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
+function updateItem(id,data){ let arr=getItems(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
+function deleteItem(id){ let arr=getItems(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.items,arr); renderItems(); renderProductItemOptions(); }
+
+// PRODUCTS
+function getProducts(){ return load(DB_KEYS.products); }
+function addProduct(p){ const arr=getProducts(); arr.push(p); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
+function updateProduct(id,data){ let arr=getProducts(); arr=arr.map(x=>x.id===id?({...x,...data}):x); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
+function deleteProduct(id){ let arr=getProducts(); arr=arr.filter(x=>x.id!==id); save(DB_KEYS.products,arr); renderProducts(); renderProductSelect(); }
+
+// TRANSACTIONS
+function getTransactions(){ return load(DB_KEYS.transactions); }
+function addTransaction(t){ const arr=getTransactions(); arr.push(t); save(DB_KEYS.transactions,arr); renderTransactionsList(); renderReport(); }
+
+// ------------------------ Render functions ------------------------
+function renderUsers(){ const arr=getUsers(); const cont=document.getElementById('users-list'); if(!cont) return; let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada user</div>';
+  arr.forEach(u=>{
+    html+=`<div class="card mb-2 p-2 d-flex align-items-center"><div class="d-flex w-100 align-items-center gap-3">
+      <img src="${u.photo||'https://via.placeholder.com/48'}" class="img-thumb">
+      <div class="flex-grow-1">
+        <strong>${u.name}</strong> <div class="small">NIK: ${u.nik || '-'} • HP: ${u.hp||'-'} </div>
+        <div class="small">Alamat: ${u.alamat||'-'}</div>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-warning me-1" onclick="editUser('${u.id}')">Ubah</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDelete('user','${u.id}')">Hapus</button>
+      </div>
+    </div></div>`;
+  }); cont.innerHTML=html;
+}
+
+function renderSuppliers(){ const arr=getSuppliers(); const cont=document.getElementById('suppliers-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada supplier</div>';
+  arr.forEach(s=>{ html+=`<div class="card mb-2 p-2 d-flex justify-content-between"><div><strong>${s.name}</strong><div class="small">Perusahaan: ${s.company||'-'} • HP: ${s.hp||'-'}</div><div class="small">Keterangan: ${s.note||'-'}</div></div><div class="text-end"><button class="btn btn-sm btn-warning me-1" onclick="editSupplier('${s.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('supplier','${s.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
+
+function renderCategories(){ const arr=getCategories(); const cont=document.getElementById('categories-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada kategori</div>';
+  arr.forEach(c=>{ html+=`<div class="d-flex justify-content-between mb-2"><div>${c.name}</div><div><button class="btn btn-sm btn-warning me-1" onclick="editCategory('${c.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('category','${c.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
+
+function renderItems(){ const arr=getItems(); const cont=document.getElementById('items-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada item</div>';
+  arr.forEach(i=>{ html+=`<div class="d-flex justify-content-between mb-2"><div>${i.name}</div><div><button class="btn btn-sm btn-warning me-1" onclick="editItem('${i.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('item','${i.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
+
+function renderProducts(){ const arr=getProducts(); const cont=document.getElementById('products-list'); let html=''; if(arr.length===0) html='<div class="alert alert-secondary">Belum ada produk</div>';
+  arr.forEach(p=>{ const sup = getSuppliers().find(s=>s.id===p.supplierId)?.name || '-'; const cat = getCategories().find(c=>c.id===p.categoryId)?.name || '-'; const itm = getItems().find(i=>i.id===p.itemId)?.name || '-'; html+=`<div class="card mb-2 p-2 d-flex justify-content-between"><div><strong>${p.name}</strong><div class="small">Supplier: ${sup} • Kategori: ${cat} • Item: ${itm}</div><div class="small">Stok: ${p.stock} • Harga: ${p.price}</div></div><div class="text-end"><button class="btn btn-sm btn-warning me-1" onclick="editProduct('${p.id}')">Ubah</button><button class="btn btn-sm btn-danger" onclick="confirmDelete('product','${p.id}')">Hapus</button></div></div>`; }); cont.innerHTML=html; }
+
+function renderProductSelect(){ const sel=document.getElementById('product-select'); if(!sel) return; const arr=getProducts(); sel.innerHTML=''; arr.forEach(p=>{ sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name} — Stok:${p.stock} — Rp ${numberFormat(p.price)}</option>`); }); }
+
+function renderMemberSelect(){ const sel=document.getElementById('member-select'); if(!sel) return; const arr=getUsers(); sel.innerHTML=''; sel.insertAdjacentHTML('beforeend','<option value="">-- Pilih member --</option>'); arr.forEach(u=> sel.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name} (ID:${u.id})</option>`)); }
+
+// Transactions list
+function renderTransactionsList(){ const arr=getTransactions(); const cont=document.getElementById('transactions-list'); if(!cont) return; if(arr.length===0) { cont.innerHTML='<div class="alert alert-secondary">Belum ada transaksi</div>'; return; }
+  let html=''; arr.slice().reverse().forEach(t=>{
+    html+=`<div class="card mb-2 p-2"><div class="d-flex justify-content-between"><div><strong>${t.id}</strong><div class="small">Pelanggan: ${t.customerName} • Tgl: ${new Date(t.createdAt).toLocaleString()}</div></div><div class="text-end"><div class="small">Total: Rp ${numberFormat(t.total)}</div><div class="small">Metode: ${t.paymentMethod} • Status: ${t.status || 'open'}</div></div></div>
+      <div class="mt-2"><button class="btn btn-sm btn-info me-1" onclick="viewTransaction('${t.id}')">Lihat</button></div></div>`;
+  }); cont.innerHTML=html; }
+
+// Reports
+function renderReport(){ const container=document.getElementById('report-area'); const tx = getTransactions(); const products = getProducts(); let totalSales = tx.reduce((s,x)=>s + (x.total||0),0); let totalTrans = tx.length; let stockZero = products.filter(p=>p.stock<=0).length; let html=`<div class="row">
+  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Penjualan Total</strong><div>Rp ${numberFormat(totalSales)}</div></div></div>
+  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Jumlah Transaksi</strong><div>${totalTrans}</div></div></div>
+  <div class="col-md-4"><div class="card p-3 mb-2"><strong>Produk Habis</strong><div>${stockZero} produk</div></div></div>
+</div>
+<div class="mt-2"><h6>Rincian Transaksi</h6>`;
+  tx.slice().reverse().forEach(t=>{ html+=`<div class="card p-2 mb-1"><div class="d-flex justify-content-between"><div>${t.id} • ${t.customerName}</div><div>Rp ${numberFormat(t.total)}</div></div></div>`; }); html+='</div>'; container.innerHTML=html; }
+
+// ------------------------ Utilities ------------------------
+function numberFormat(n){ return (n||0).toLocaleString('id-ID'); }
+
+// ------------------------ Forms (modal-like via SweetAlert) ------------------------
+// USER FORM
+function openUserForm(editId){
+  if(editId){ const u=getUsers().find(x=>x.id===editId); userForm(u); }
+  else userForm();
+}
+function userForm(u){
+  const isEdit = !!u;
+  const html = `
+    <input id="uf-name" class="swal2-input" placeholder="Nama" value="${u?escapeHtml(u.name):''}">
+    <input id="uf-nik" class="swal2-input" placeholder="NIK" value="${u?escapeHtml(u.nik):''}">
+    <input id="uf-hp" class="swal2-input" placeholder="HP" value="${u?escapeHtml(u.hp):''}">
+    <input id="uf-alamat" class="swal2-input" placeholder="Alamat" value="${u?escapeHtml(u.alamat):''}">
+    <label class="form-label">Photo (opsional)</label>
+    <input id="uf-photo" type="file" accept="image/*" class="swal2-file">`;
+  Swal.fire({ title: isEdit? 'Edit User' : 'Tambah User', html, preConfirm: ()=>{
+    return new Promise((resolve)=>{
+      const name=document.getElementById('uf-name').value.trim();
+      const nik=document.getElementById('uf-nik').value.trim();
+      const hp=document.getElementById('uf-hp').value.trim();
+      const alamat=document.getElementById('uf-alamat').value.trim();
+      const fileElem=document.getElementById('uf-photo');
+      if(!name) { Swal.showValidationMessage('Nama wajib diisi'); return; }
+      if(fileElem && fileElem.files && fileElem.files[0]){
+        const fr=new FileReader(); fr.onload = ()=>{ resolve({name,nik,hp,alamat,photo:fr.result}); }; fr.readAsDataURL(fileElem.files[0]);
+      } else resolve({name,nik,hp,alamat,photo: u?u.photo:''});
+    });
+  }}).then(res=>{
+    if(res.isConfirmed){ const data=res.value; if(isEdit){ updateUser(u.id,data); Swal.fire('Berhasil','User diupdate','success'); } else { const newU={id:uid('USR'), name:data.name, nik:data.nik, hp:data.hp, alamat:data.alamat, photo:data.photo}; addUser(newU); Swal.fire('Berhasil','User ditambahkan','success'); }
+  }});
+}
+
+// SUPPLIER FORM
+function openSupplierForm(id){ if(id){ supplierForm(getSuppliers().find(x=>x.id===id)); } else supplierForm(); }
+function supplierForm(s){ const isEdit=!!s; Swal.fire({ title: isEdit? 'Edit Supplier':'Tambah Supplier', html: `<input id="sf-name" class="swal2-input" placeholder="Nama" value="${s?escapeHtml(s.name):''}"><input id="sf-company" class="swal2-input" placeholder="Nama Perusahaan" value="${s?escapeHtml(s.company):''}"><input id="sf-hp" class="swal2-input" placeholder="HP" value="${s?escapeHtml(s.hp):''}"><textarea id="sf-note" class="swal2-textarea" placeholder="Keterangan">${s?escapeHtml(s.note):''}</textarea>`, preConfirm: ()=>{ const name=document.getElementById('sf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name,company:document.getElementById('sf-company').value.trim(),hp:document.getElementById('sf-hp').value.trim(),note:document.getElementById('sf-note').value.trim()}; } }).then(res=>{ if(res.isConfirmed){ if(isEdit) updateSupplier(s.id,res.value); else addSupplier({id:uid('SUP'),...res.value}); Swal.fire('Sukses','Disimpan','success'); } }); }
+
+// CATEGORY FORM
+function openCategoryForm(){ Swal.fire({ title:'Tambah Kategori', html:`<input id="cf-name" class="swal2-input" placeholder="Nama kategori">`, preConfirm: ()=>{ const name=document.getElementById('cf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ addCategory({id:uid('CAT'), name:res.value.name}); Swal.fire('Sukses','Kategori ditambah','success'); } }); }
+function editCategory(id){ const c=getCategories().find(x=>x.id===id); Swal.fire({ title:'Edit Kategori', html:`<input id="cf-name" class="swal2-input" value="${escapeHtml(c.name)}">`, preConfirm: ()=>{ const name=document.getElementById('cf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ updateCategory(c.id,res.value); Swal.fire('Sukses','Diupdate','success'); } }); }
+
+// ITEM FORM
+function openItemForm(){ Swal.fire({ title:'Tambah Item', html:`<input id="it-name" class="swal2-input" placeholder="Nama item">`, preConfirm: ()=>{ const name=document.getElementById('it-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ addItem({id:uid('ITM'), name:res.value.name}); Swal.fire('Sukses','Item ditambah','success'); } }); }
+function editItem(id){ const it=getItems().find(x=>x.id===id); Swal.fire({ title:'Edit Item', html:`<input id="it-name" class="swal2-input" value="${escapeHtml(it.name)}">`, preConfirm: ()=>{ const name=document.getElementById('it-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name}; } }).then(res=>{ if(res.isConfirmed){ updateItem(it.id,res.value); Swal.fire('Sukses','Diupdate','success'); } }); }
+
+// PRODUCT FORM
+function openProductForm(editId){ if(editId){ productForm(getProducts().find(x=>x.id===editId)); } else productForm(); }
+function productForm(p){ const isEdit=!!p; const suppliers = getSuppliers(); const categories = getCategories(); const items = getItems(); let supOptions = suppliers.map(s=>`<option value="${s.id}" ${p && p.supplierId===s.id?'selected':''}>${s.name}</option>`).join(''); let catOptions = categories.map(c=>`<option value="${c.id}" ${p && p.categoryId===c.id?'selected':''}>${c.name}</option>`).join(''); let itemOptions = items.map(i=>`<option value="${i.id}" ${p && p.itemId===i.id?'selected':''}>${i.name}</option>`).join(''); Swal.fire({ title: isEdit? 'Edit Produk':'Tambah Produk', html: `<input id="pf-name" class="swal2-input" placeholder="Nama produk" value="${p?escapeHtml(p.name):''}"><div class="swal2-row"><select id="pf-sup" class="swal2-select">${supOptions}</select><select id="pf-cat" class="swal2-select">${catOptions}</select><select id="pf-item" class="swal2-select">${itemOptions}</select></div><input id="pf-stock" type="number" class="swal2-input" placeholder="Stok" value="${p?p.stock:0}"><input id="pf-price" type="number" class="swal2-input" placeholder="Harga" value="${p?p.price:0}">`, preConfirm: ()=>{ const name=document.getElementById('pf-name').value.trim(); if(!name) Swal.showValidationMessage('Nama wajib'); return {name, supplierId:document.getElementById('pf-sup').value, categoryId:document.getElementById('pf-cat').value, itemId:document.getElementById('pf-item').value, stock:parseInt(document.getElementById('pf-stock').value||0,10), price:parseFloat(document.getElementById('pf-price').value||0)} }, didOpen: ()=>{
+    // if no suppliers/categories/items exist, show notice
+    if(suppliers.length===0 || categories.length===0 || items.length===0){ Swal.showValidationMessage('Pastikan sudah menambahkan supplier, kategori, dan item terlebih dahulu.'); }
+  } }).then(res=>{ if(res.isConfirmed){ if(isEdit) updateProduct(p.id,res.value); else addProduct({id:uid('PRD'),...res.value}); Swal.fire('Sukses','Produk tersimpan','success'); } }); }
+
+// ------------------------ Delete confirmation ------------------------
+function confirmDelete(type,id){ Swal.fire({ title:'Hapus?', text:'Data akan dihapus permanen.', icon:'warning', showCancelButton:true }).then(r=>{ if(r.isConfirmed){ if(type==='user') deleteUser(id); if(type==='supplier') deleteSupplier(id); if(type==='category') deleteCategory(id); if(type==='item') deleteItem(id); if(type==='product') deleteProduct(id); Swal.fire('Terhapus','','success'); } }); }
+
+// ------------------------ Transaction / Cart logic ------------------------
+let CART = [];
+function onCustomerTypeChange(){ const v=document.getElementById('trx-customer-type').value; document.getElementById('member-block').style.display = v==='member' ? 'block':'none'; document.getElementById('umum-block').style.display = v==='umum' ? 'block':'none'; }
+
+function addToCart(){ const pid=document.getElementById('product-select').value; const qty=parseInt(document.getElementById('product-qty').value||1,10); if(!pid){ Swal.fire('Pilih produk terlebih dahulu'); return; } const p = getProducts().find(x=>x.id===pid); if(!p) return; if(qty<=0) return; if(p.stock < qty){ Swal.fire('Stok tidak cukup'); return; }
+  const existing = CART.find(c=>c.productId===pid);
+  if(existing){ existing.qty += qty; } else CART.push({productId:pid, name:p.name, price:p.price, qty}); renderCart(); }
+
+function renderCart(){ const ct=document.getElementById('cart-list'); if(!ct) return; let html=''; if(CART.length===0) html='<div class="alert alert-secondary">Keranjang kosong</div>';
+  let subtotal = 0;
+  CART.forEach((c,idx)=>{ const p=getProducts().find(x=>x.id===c.productId); const line = (c.qty * c.price); subtotal += line; html+=`<div class="d-flex justify-content-between align-items-center mb-1"><div><strong>${c.name}</strong> <div class="small">Qty: <input type="number" value="${c.qty}" min="1" style="width:70px" onchange="updateCartQty(${idx},this.value)"></div></div><div>Rp ${numberFormat(line)} <button class="btn btn-sm btn-danger ms-2" onclick="removeCart(${idx})">Hapus</button></div></div>`; });
+  // discount controls
+  const discountEnabled = document.getElementById('discount-enable').checked;
+  document.getElementById('discount-controls').style.display = discountEnabled ? 'flex':'none';
+  let discountAmount = 0;
+  if(discountEnabled){ const type=document.getElementById('discount-type').value; const val=parseFloat(document.getElementById('discount-value').value||0);
+    if(type==='percent') discountAmount = subtotal * (val/100); else discountAmount = val;
+  }
+  const total = Math.max(0, subtotal - discountAmount);
+  document.getElementById('subtotal').innerText = 'Rp '+numberFormat(subtotal);
+  document.getElementById('discount-amount').innerText = 'Rp '+numberFormat(Math.round(discountAmount));
+  document.getElementById('grandtotal').innerText = 'Rp '+numberFormat(Math.round(total));
+  ct.innerHTML = html;
+}
+function updateCartQty(idx, val){ const q=parseInt(val||1,10); if(q<=0) return; const c=CART[idx]; const p=getProducts().find(x=>x.id===c.productId); if(p.stock < q){ Swal.fire('Stok tidak cukup'); return; } c.qty = q; renderCart(); }
+function removeCart(idx){ CART.splice(idx,1); renderCart(); }
+
+function checkout(){ if(CART.length===0){ Swal.fire('Keranjang kosong'); return; }
+  // prepare transaction
+  const custType=document.getElementById('trx-customer-type').value; let customerName='Umum'; let customerId=''; let customerData={};
+  if(custType==='member'){ const mid=document.getElementById('member-select').value; if(!mid){ Swal.fire('Pilih member'); return; } const u=getUsers().find(x=>x.id===mid); customerName=u.name; customerId=u.id; customerData={id:u.id,name:u.name,nik:u.nik,hp:u.hp,alamat:u.alamat}; }
+  else { const n=document.getElementById('umum-name').value.trim(); if(!n){ Swal.fire('Isi data pelanggan umum'); return; } customerName=n; customerData={name:n,hp:document.getElementById('umum-hp').value.trim(), alamat:document.getElementById('umum-alamat').value.trim()}; }
+  // calc totals same as renderCart
+  let subtotal = CART.reduce((s,c)=>s + c.qty*c.price,0);
+  let discountAmount = 0; if(document.getElementById('discount-enable').checked){ const type = document.getElementById('discount-type').value; const val = parseFloat(document.getElementById('discount-value').value||0); discountAmount = type==='percent'? subtotal*(val/100): val; }
+  const total = Math.max(0, Math.round(subtotal - discountAmount));
+  const paymentMethod = document.getElementById('payment-method').value;
+  const paidAmount = parseFloat(document.getElementById('paid-amount').value||0);
+  const status = (paymentMethod==='cash' && paidAmount>=total) || (paymentMethod==='tf' && paidAmount>=total) ? 'Lunas' : (paymentMethod==='kredit' ? 'Kredit' : (paidAmount>0 && paidAmount<total ? 'Partially Paid':'Belum Lunas'));
+
+  // reduce stock
+  const products = getProducts().map(p=>({...p}));
+  for(const c of CART){ const prod = products.find(x=>x.id===c.productId); if(!prod) continue; if(prod.stock < c.qty){ Swal.fire('Stok berubah, periksa kembali'); return; } prod.stock -= c.qty; }
+  save(DB_KEYS.products, products);
+
+  const trx = { id: uid('TRX'), createdAt: Date.now(), customerType: custType, customerId: customerId, customerName: customerName, customerData, items: JSON.parse(JSON.stringify(CART)), subtotal, discount: Math.round(discountAmount), total, paymentMethod, paidAmount, status };
+  addTransaction(trx);
+  // record payment minimal
+  const payments = load(DB_KEYS.payments||'sp_payments'); payments.push({id:uid('PAY'), trxId:trx.id, amount:paidAmount, method:paymentMethod, createdAt:Date.now()}); save(DB_KEYS.payments,payments);
+
+  Swal.fire('Sukses','Transaksi tersimpan (ID: '+trx.id+')','success');
+  // clear cart
+  CART = [];
+  renderCart(); renderProducts(); renderTransactionsList(); renderReport(); }
+
+function viewTransaction(id){ const t = getTransactions().find(x=>x.id===id); if(!t) return; let html=`<strong>ID: ${t.id}</strong><div>${new Date(t.createdAt).toLocaleString()}</div><div>Pelanggan: ${t.customerName}</div><hr><div>`; t.items.forEach(i=> html+=`<div>${i.name} • ${i.qty} x Rp ${numberFormat(i.price)} = Rp ${numberFormat(i.qty*i.price)}</div>`); html+=`</div><hr><div>Total: Rp ${numberFormat(t.total)}</div><div>Status: ${t.status}</div>`; Swal.fire({title:'Detail Transaksi', html}); }
+
+// ------------------------ Helpers ------------------------
+function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+// initial rendering
+renderUsers(); renderSuppliers(); renderCategories(); renderItems(); renderProducts(); renderProductSelect(); renderMemberSelect(); renderTransactionsList(); renderReport();
+
+// bind discount toggle
+document.getElementById('discount-enable').addEventListener('change',()=>renderCart());
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
